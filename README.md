@@ -30,10 +30,39 @@ OpenClaw is a production-ready AI agent framework that transforms how you work. 
 8. **Proactive Context Switcher** - Detects work context changes, surfaces relevant info
 9. **Email Triaging & Auto-Response** - Categorizes emails, drafts responses, follows up
 10. **Personal Knowledge Graph Builder** - Extracts insights, builds queryable knowledge
+11. **🛡⚡ Avengers System** - Multi-agent orchestration via WhatsApp (6 specialized agents working as a team)
 
-## Quick Start - Telegram Control
+## Quick Start Options
 
-The easiest way to run OpenClaw is through Telegram, where you can control all agents like virtual employees:
+### Option 1: Avengers System (Multi-Agent via WhatsApp)
+
+The most powerful setup - manage 6 specialized agents through WhatsApp:
+
+```bash
+# 1. Install dependencies
+pip install -r requirements.txt
+
+# 2. Set up WhatsApp (Twilio)
+# Get Twilio account and WhatsApp sandbox
+
+# 3. Configure .env
+cp .env.example .env
+# Add TWILIO credentials and ANTHROPIC_API_KEY
+
+# 4. Start the Avengers system
+python -m projects.11_avengers_system.main
+
+# 5. In separate terminal, start WhatsApp manager
+python -m projects.11_avengers_system.whatsapp_manager
+
+# 6. Message your Twilio WhatsApp number!
+```
+
+See [Avengers System README](projects/11_avengers_system/README.md) for details.
+
+### Option 2: Telegram Control (Individual Agents)
+
+Control individual agents via Telegram:
 
 ```bash
 # 1. Install dependencies

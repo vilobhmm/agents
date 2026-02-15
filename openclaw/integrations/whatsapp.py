@@ -94,3 +94,70 @@ class WhatsAppIntegration:
         except Exception as e:
             logger.error(f"Error sending WhatsApp media: {e}")
             return False
+
+    async def send_briefing(
+        self, to: str, title: str, sections: list[dict], footer: Optional[str] = None
+    ) -> bool:
+        """
+        Send a formatted briefing message
+
+        Args:
+            to: Recipient number
+            title: Briefing title
+            sections: List of dicts with 'title' and 'content'
+            footer: Optional footer text
+
+        Returns:
+            bool: True if successful
+        """
+        # Format briefing
+        message = f"*{title}*\n\n"
+
+        for section in sections:
+            message += f"*{section['title']}*\n"
+            message += f"{section['content']}\n\n"
+
+        if footer:
+            message += f"_{footer}_"
+
+        return await self.send_message(to, message)
+
+    async def send_notification(
+        self, to: str, emoji: str, title: str, body: str, urgent: bool = False
+    ) -> bool:
+        """
+        Send a formatted notification
+
+        Args:
+            to: Recipient number
+            emoji: Emoji for notification type
+            title: Notification title
+            body: Notification body
+            urgent: Mark as urgent
+
+        Returns:
+            bool: True if successful
+        """
+        prefix = "🚨 *URGENT*\n\n" if urgent else ""
+        message = f"{prefix}{emoji} *{title}*\n\n{body}"
+
+        return await self.send_message(to, message)
+
+    async def send_list(self, to: str, title: str, items: list[str]) -> bool:
+        """
+        Send a formatted list message
+
+        Args:
+            to: Recipient number
+            title: List title
+            items: List items
+
+        Returns:
+            bool: True if successful
+        """
+        message = f"*{title}*\n\n"
+
+        for i, item in enumerate(items, 1):
+            message += f"{i}. {item}\n"
+
+        return await self.send_message(to, message)
