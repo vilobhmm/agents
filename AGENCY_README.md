@@ -226,19 +226,67 @@ GITHUB_TOKEN=...
 
 ## 🛠️ Commands
 
+### Development Mode
+
 ```bash
 # Start full system (processor + Telegram)
 python -m agency start
 
-# Start only processor
+# Start only processor (no Telegram bot)
 python -m agency process
 
-# Start only Telegram bot
+# Start only Telegram bot (no processor)
 python -m agency telegram
-
-# Send test message
-python -m agency send "Your message" researcher
 ```
+
+### Testing & Debugging
+
+```bash
+# Send a test message to an agent
+python -m agency send "What's new in AI?" researcher
+python -m agency send "Post a tweet" social
+
+# Show system status (queue sizes, active conversations, agents)
+python -m agency status
+```
+
+### Database Management
+
+```bash
+# Reset conversation state (clear active conversations)
+python -m agency reset
+
+# Clear all persistent data (queue, conversations, workspaces)
+python -m agency clear
+
+# Clear without confirmation prompt
+python -m agency clear --force
+```
+
+### Initialization
+
+```bash
+# Initialize workspace and create example config
+python -m agency init
+
+# Initialize with custom workspace
+python -m agency init --workspace ~/my-agency-workspace
+```
+
+### Advanced Options
+
+```bash
+# Use custom config file
+python -m agency start --config ./my-agents.json
+
+# Use custom workspace directory
+python -m agency start --workspace ~/my-workspace
+
+# Combine options
+python -m agency process --config ./config.json --workspace ~/workspace
+```
+
+**Tip:** Run `python -m agency --help` or `python -m agency <command> --help` for more information.
 
 ---
 
