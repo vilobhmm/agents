@@ -1,8 +1,10 @@
 # 🛡⚡ Avengers AI Operating System
 
+**Multi-agent Agentic - Personal. Proactive. Powerful.**
+
 **Six agents. Clear ownership. No overlap. Continuous output.**
 
-A sophisticated multi-agent orchestration system where specialized AI agents work together like the Avengers team. You interact with **Iron Man** (Chief of Staff) via WhatsApp, who coordinates and manages five specialized agents to build your public AI laboratory.
+A sophisticated multi-agent orchestration system where specialized AI agents work together like the Avengers team. You interact with **Iron Man** (Chief of Staff) via **Telegram** or **WhatsApp**, who coordinates and manages five specialized agents to build your public AI laboratory.
 
 ## The Team
 

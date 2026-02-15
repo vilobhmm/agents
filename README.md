@@ -1,6 +1,6 @@
 # OpenClaw - Agentic AI Use Cases
 
-**Personal. Proactive. Powerful.**
+**Multi-agent Agentic - Personal. Proactive. Powerful.**
 
 OpenClaw is a production-ready AI agent framework that transforms how you work. Build intelligent agents that monitor, analyze, and act on your behalf - like having a team of virtual employees working 24/7.
 
@@ -32,35 +32,43 @@ OpenClaw is a production-ready AI agent framework that transforms how you work. 
 10. **Personal Knowledge Graph Builder** - Extracts insights, builds queryable knowledge
 11. **🛡⚡ Avengers System** - Multi-agent orchestration via WhatsApp (6 specialized agents working as a team)
 
-## Quick Start Options
+## 🚀 Quick Start - Get Running in 15 Minutes
 
-### Option 1: Avengers System (Multi-Agent via WhatsApp)
+### **Recommended: Avengers System via Telegram (Easiest!)**
 
-The most powerful setup - manage 6 specialized agents through WhatsApp:
+The most powerful setup - manage 6 specialized agents through Telegram chat:
 
 ```bash
 # 1. Install dependencies
 pip install -r requirements.txt
 
-# 2. Set up WhatsApp (Twilio)
-# Get Twilio account and WhatsApp sandbox
+# 2. Create Telegram bot (@BotFather)
+# Get bot token and your chat ID
 
 # 3. Configure .env
 cp .env.example .env
-# Add TWILIO credentials and ANTHROPIC_API_KEY
+# Add TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, and ANTHROPIC_API_KEY
 
-# 4. Start the Avengers system
-python -m projects.11_avengers_system.main
+# 4. Start Telegram interface
+python -m projects.11_avengers_system.telegram_manager
 
-# 5. In separate terminal, start WhatsApp manager
-python -m projects.11_avengers_system.whatsapp_manager
-
-# 6. Message your Twilio WhatsApp number!
+# 5. Message your bot in Telegram!
+# Send: /start
 ```
 
-See [Avengers System README](projects/11_avengers_system/README.md) for details.
+**👉 [Complete Step-by-Step Guide - START TODAY](START_TODAY.md)** ← **Start here!**
 
-### Option 2: Telegram Control (Individual Agents)
+See [Avengers System README](projects/11_avengers_system/README.md) for full details.
+
+### Alternative: WhatsApp Interface
+
+Use WhatsApp instead of Telegram (requires Twilio account):
+
+```bash
+python -m projects.11_avengers_system.whatsapp_manager
+```
+
+### Alternative: Individual Agents via Telegram
 
 Control individual agents via Telegram:
 
