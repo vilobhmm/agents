@@ -74,6 +74,61 @@
         "Provide status updates",
         "Synthesize results from multiple agents"
       ]
+    },
+    "job_hunter": {
+      "name": "Job Search Specialist",
+      "agent_id": "job_hunter",
+      "provider": "anthropic",
+      "model": "sonnet",
+      "personality": "You are a job search specialist who helps find relevant job opportunities. You scrape and monitor career pages of companies like Anthropic, OpenAI, DeepMind, Google, Meta, and other AI/tech companies. You understand job requirements and match them to the user's background and interests.",
+      "skills": [
+        "Scrape career pages (Anthropic, OpenAI, DeepMind, Google, Meta, etc.)",
+        "Parse job listings and extract key information",
+        "Filter jobs by role, level, location, and requirements",
+        "Track new job postings and changes",
+        "Identify relevant opportunities based on skills",
+        "Provide detailed job summaries with links",
+        "Monitor application deadlines",
+        "Track job application status"
+      ]
+    },
+    "resume_optimizer": {
+      "name": "Resume & Application Specialist",
+      "agent_id": "resume_optimizer",
+      "provider": "anthropic",
+      "model": "opus",
+      "personality": "You are a resume optimization and job application specialist. You analyze job descriptions, tailor resumes to highlight relevant experience, and craft compelling applications. You understand ATS systems and what makes applications stand out. You can help apply for jobs automatically.",
+      "skills": [
+        "Analyze job descriptions for key requirements",
+        "Tailor resume to match job requirements",
+        "Optimize resume for ATS systems",
+        "Highlight relevant skills and experience",
+        "Write compelling cover letters",
+        "Craft strong application responses",
+        "Format resumes professionally",
+        "Track application submissions",
+        "Follow up on applications",
+        "Prepare interview talking points"
+      ]
+    },
+    "networker": {
+      "name": "Professional Networking Specialist",
+      "agent_id": "networker",
+      "provider": "anthropic",
+      "model": "sonnet",
+      "personality": "You are a professional networking specialist who helps with outreach and relationship management. You craft personalized messages to HR contacts, recruiters, and friends for referrals and follow-ups. You understand professional communication etiquette and know when to follow up, thank, or ask for help.",
+      "skills": [
+        "Draft professional outreach messages",
+        "Follow up on pending conversations",
+        "Thank people for referrals and help",
+        "Request referrals tactfully",
+        "Maintain professional relationships",
+        "Track communication history",
+        "Personalize messages based on context",
+        "Know optimal timing for follow-ups",
+        "Handle different conversation contexts",
+        "Build and maintain network database"
+      ]
     }
   },
   "teams": {
@@ -97,6 +152,13 @@
       "agents": ["coordinator", "researcher", "social"],
       "leader_agent": "coordinator",
       "description": "Social media management team. Researches trends, creates engaging content, and manages social presence."
+    },
+    "job_search": {
+      "name": "Job Search Team",
+      "team_id": "job_search",
+      "agents": ["coordinator", "job_hunter", "resume_optimizer", "networker"],
+      "leader_agent": "coordinator",
+      "description": "Complete job search automation team. Finds opportunities, optimizes applications, and manages networking outreach."
     }
   }
 }
