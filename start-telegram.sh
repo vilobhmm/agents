@@ -31,7 +31,9 @@ fi
 
 # Load environment variables
 echo -e "${GREEN}✓ Loading environment variables...${NC}"
-export $(cat .env | grep -v '^#' | xargs)
+set -a
+source .env
+set +a
 
 # Check if virtual environment exists
 if [ ! -d "agents-venv" ]; then
