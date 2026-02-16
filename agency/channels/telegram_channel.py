@@ -61,8 +61,21 @@ class TelegramChannel:
         self.app.add_handler(CommandHandler("status", self._handle_status))
         self.app.add_handler(CommandHandler("agents", self._handle_agents))
         self.app.add_handler(CommandHandler("teams", self._handle_teams))
+
+        # CC Agent Commands
         self.app.add_handler(CommandHandler("briefing", self._handle_briefing))
+        self.app.add_handler(CommandHandler("morning", self._handle_briefing))  # Alias
+        self.app.add_handler(CommandHandler("emails", self._handle_emails))
+        self.app.add_handler(CommandHandler("calendar", self._handle_calendar))
+        self.app.add_handler(CommandHandler("meeting", self._handle_next_meeting))
+
+        # Job Hunter Commands
         self.app.add_handler(CommandHandler("jobs", self._handle_jobs))
+        self.app.add_handler(CommandHandler("jobsearch", self._handle_job_search))
+        self.app.add_handler(CommandHandler("trackjobs", self._handle_track_jobs))
+        self.app.add_handler(CommandHandler("applications", self._handle_applications))
+
+        # Other Commands
         self.app.add_handler(CommandHandler("research", self._handle_research))
 
         # Add message handler (non-commands)
@@ -98,16 +111,26 @@ class TelegramChannel:
         user = update.effective_user
         await update.message.reply_text(
             f"👋 Hi {user.first_name}!\n\n"
-            "I'm your Agency assistant. I coordinate a team of AI agents to help you.\n\n"
-            "**Quick Commands:**\n"
-            "• `/briefing` - Daily briefing\n"
-            "• `/jobs` - Job opportunities\n"
-            "• `/research` - AI research\n"
-            "• `/help` - Full command list\n\n"
-            "**Talk to agents:**\n"
-            "`@cc Good morning briefing`\n"
-            "`@researcher What's new in AI?`\n\n"
-            "Type /help to see all agents and teams."
+            "🤖 **Your Proactive AI Multi-Agent Team**\n\n"
+            "I coordinate powerful AI agents to keep you ahead of your day!\n\n"
+            "**🌟 CC Agent (Productivity):**\n"
+            "• `/morning` - Daily briefing 📋\n"
+            "• `/emails` - Check inbox 📧\n"
+            "• `/calendar` - Today's schedule 📅\n"
+            "• `/meeting` - Next meeting prep 🔜\n\n"
+            "**💼 Job Hunter (Career):**\n"
+            "• `/jobs` - Quick job search 🔍\n"
+            "• `/jobsearch [query]` - Custom search 🎯\n"
+            "• `/trackjobs` - Tracked jobs 📊\n"
+            "• `/applications` - Your applications 📝\n\n"
+            "**🔧 System:**\n"
+            "• `/help` - Full command list\n"
+            "• `/agents` - Available agents\n"
+            "• `/status` - System status\n\n"
+            "**💬 Or just chat naturally:**\n"
+            "`@cc What's on my calendar?`\n"
+            "`@job_hunter Find Java jobs at TCS`\n\n"
+            "Type /help for more details! 🚀"
         )
 
     async def _handle_help(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -134,14 +157,25 @@ class TelegramChannel:
                     help_text += f"• `@{team_id}` - {desc}\n"
                 help_text += "\n"
 
-            # Commands
-            help_text += "**Quick Commands:**\n"
-            help_text += "• `/briefing` - Daily briefing from CC\n"
-            help_text += "• `/jobs` - Find job opportunities\n"
-            help_text += "• `/research` - Latest AI research\n"
+            # Commands organized by category
+            help_text += "**📋 CC Commands (Productivity):**\n"
+            help_text += "• `/morning` or `/briefing` - Daily briefing\n"
+            help_text += "• `/emails` - Check unread emails\n"
+            help_text += "• `/calendar` - Today's schedule\n"
+            help_text += "• `/meeting` - Next meeting details\n\n"
+
+            help_text += "**💼 Job Hunter Commands:**\n"
+            help_text += "• `/jobs [optional query]` - Search jobs\n"
+            help_text += "• `/jobsearch <query>` - Custom job search\n"
+            help_text += "  Example: `/jobsearch Java Developer at TCS`\n"
+            help_text += "• `/trackjobs` - View tracked jobs\n"
+            help_text += "• `/applications` - View your applications\n\n"
+
+            help_text += "**🔧 System Commands:**\n"
             help_text += "• `/agents` - List all agents\n"
             help_text += "• `/teams` - List all teams\n"
-            help_text += "• `/status` - System status\n\n"
+            help_text += "• `/status` - System status\n"
+            help_text += "• `/research` - Latest AI research\n\n"
 
             # Usage examples
             help_text += "**Or talk directly:**\n"
@@ -232,7 +266,7 @@ Just message me naturally with an @mention!
         await update.message.reply_text(teams_text)
 
     async def _handle_briefing(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle /briefing command - shortcut for @cc daily briefing"""
+        """Handle /briefing or /morning command - shortcut for @cc daily briefing"""
         user = update.effective_user
 
         # Check if cc agent exists
@@ -260,10 +294,85 @@ Just message me naturally with an @mention!
         self.queue.enqueue(message_data, "incoming")
 
         logger.info(f"Briefing requested by {user.username}")
-        await update.message.reply_text("📋 Preparing your daily briefing...")
+        await update.message.reply_text("☀️ Good morning! Preparing your daily briefing...")
+
+    async def _handle_emails(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /emails command - get unread emails"""
+        user = update.effective_user
+
+        if self.config and "cc" not in self.config.agents:
+            await update.message.reply_text("⚠️ CC agent not configured.")
+            return
+
+        message_data = MessageData(
+            channel="telegram",
+            sender=user.username or user.first_name,
+            sender_id=str(user.id),
+            message="@cc Show me my unread emails, prioritized by importance.",
+            timestamp=time.time(),
+            message_id=str(update.message.message_id),
+            metadata={
+                "chat_id": update.effective_chat.id,
+                "user_id": user.id,
+            }
+        )
+
+        self.queue.enqueue(message_data, "incoming")
+        logger.info(f"Emails requested by {user.username}")
+        await update.message.reply_text("📧 Checking your emails...")
+
+    async def _handle_calendar(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /calendar command - get today's schedule"""
+        user = update.effective_user
+
+        if self.config and "cc" not in self.config.agents:
+            await update.message.reply_text("⚠️ CC agent not configured.")
+            return
+
+        message_data = MessageData(
+            channel="telegram",
+            sender=user.username or user.first_name,
+            sender_id=str(user.id),
+            message="@cc Show me my calendar for today with all meeting details.",
+            timestamp=time.time(),
+            message_id=str(update.message.message_id),
+            metadata={
+                "chat_id": update.effective_chat.id,
+                "user_id": user.id,
+            }
+        )
+
+        self.queue.enqueue(message_data, "incoming")
+        logger.info(f"Calendar requested by {user.username}")
+        await update.message.reply_text("📅 Checking your calendar...")
+
+    async def _handle_next_meeting(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /meeting command - get next meeting details"""
+        user = update.effective_user
+
+        if self.config and "cc" not in self.config.agents:
+            await update.message.reply_text("⚠️ CC agent not configured.")
+            return
+
+        message_data = MessageData(
+            channel="telegram",
+            sender=user.username or user.first_name,
+            sender_id=str(user.id),
+            message="@cc What's my next meeting? Include attendees, agenda, and any relevant context from emails.",
+            timestamp=time.time(),
+            message_id=str(update.message.message_id),
+            metadata={
+                "chat_id": update.effective_chat.id,
+                "user_id": user.id,
+            }
+        )
+
+        self.queue.enqueue(message_data, "incoming")
+        logger.info(f"Next meeting requested by {user.username}")
+        await update.message.reply_text("🔜 Checking your next meeting...")
 
     async def _handle_jobs(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle /jobs command - shortcut for @job_hunter job search"""
+        """Handle /jobs command - universal job search with parameters"""
         user = update.effective_user
 
         # Check if job_hunter agent exists
@@ -273,12 +382,25 @@ Just message me naturally with an @mention!
             )
             return
 
+        # Get optional search parameters from command arguments
+        # Format: /jobs [role] [at company] [in location]
+        # Example: /jobs Java Developer at TCS in India
+        args = context.args
+
+        if args:
+            # User provided search criteria
+            search_query = " ".join(args)
+            message = f"@job_hunter Find {search_query}"
+        else:
+            # Default search
+            message = "@job_hunter Find new Software Engineer, ML Engineer, and Data Scientist job opportunities at companies like Google, Microsoft, TCS, Wipro, Infosys, and startups."
+
         # Create message data for @job_hunter
         message_data = MessageData(
             channel="telegram",
             sender=user.username or user.first_name,
             sender_id=str(user.id),
-            message="@job_hunter Find new ML Engineer and AI Research job opportunities at top companies like Anthropic, OpenAI, Google DeepMind, and Meta.",
+            message=message,
             timestamp=time.time(),
             message_id=str(update.message.message_id),
             metadata={
@@ -290,8 +412,101 @@ Just message me naturally with an @mention!
         # Enqueue message
         self.queue.enqueue(message_data, "incoming")
 
-        logger.info(f"Job search requested by {user.username}")
-        await update.message.reply_text("💼 Searching for job opportunities...")
+        logger.info(f"Job search requested by {user.username}: {message}")
+        await update.message.reply_text("💼 Searching for job opportunities across LinkedIn, Indeed, Naukri, and Glassdoor...")
+
+    async def _handle_job_search(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /jobsearch command - flexible universal job search"""
+        user = update.effective_user
+
+        if self.config and "job_hunter" not in self.config.agents:
+            await update.message.reply_text("⚠️ Job Hunter agent not configured.")
+            return
+
+        # Get search query
+        args = context.args
+
+        if not args:
+            await update.message.reply_text(
+                "💡 **Job Search Examples:**\n\n"
+                "🔹 `/jobsearch Java Developer at TCS in India`\n"
+                "🔹 `/jobsearch Software Engineer at Wipro`\n"
+                "🔹 `/jobsearch ML Engineer with Python and PyTorch`\n"
+                "🔹 `/jobsearch Product Manager remote`\n"
+                "🔹 `/jobsearch Senior Java Developer 5+ years`\n\n"
+                "Or use: `/jobs` for quick general search!"
+            )
+            return
+
+        search_query = " ".join(args)
+        message = f"@job_hunter Find {search_query}"
+
+        message_data = MessageData(
+            channel="telegram",
+            sender=user.username or user.first_name,
+            sender_id=str(user.id),
+            message=message,
+            timestamp=time.time(),
+            message_id=str(update.message.message_id),
+            metadata={
+                "chat_id": update.effective_chat.id,
+                "user_id": user.id,
+            }
+        )
+
+        self.queue.enqueue(message_data, "incoming")
+        logger.info(f"Universal job search: {search_query}")
+        await update.message.reply_text(f"🔍 Searching: **{search_query}**\n\nSearching across all job boards...")
+
+    async def _handle_track_jobs(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /trackjobs command - view tracked jobs"""
+        user = update.effective_user
+
+        if self.config and "job_hunter" not in self.config.agents:
+            await update.message.reply_text("⚠️ Job Hunter agent not configured.")
+            return
+
+        message_data = MessageData(
+            channel="telegram",
+            sender=user.username or user.first_name,
+            sender_id=str(user.id),
+            message="@job_hunter Show me all my tracked jobs and their current status.",
+            timestamp=time.time(),
+            message_id=str(update.message.message_id),
+            metadata={
+                "chat_id": update.effective_chat.id,
+                "user_id": user.id,
+            }
+        )
+
+        self.queue.enqueue(message_data, "incoming")
+        logger.info(f"Tracked jobs requested by {user.username}")
+        await update.message.reply_text("📊 Loading your tracked jobs...")
+
+    async def _handle_applications(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /applications command - view job applications"""
+        user = update.effective_user
+
+        if self.config and "job_hunter" not in self.config.agents:
+            await update.message.reply_text("⚠️ Job Hunter agent not configured.")
+            return
+
+        message_data = MessageData(
+            channel="telegram",
+            sender=user.username or user.first_name,
+            sender_id=str(user.id),
+            message="@job_hunter Show me all my job applications and their current status.",
+            timestamp=time.time(),
+            message_id=str(update.message.message_id),
+            metadata={
+                "chat_id": update.effective_chat.id,
+                "user_id": user.id,
+            }
+        )
+
+        self.queue.enqueue(message_data, "incoming")
+        logger.info(f"Applications requested by {user.username}")
+        await update.message.reply_text("📝 Loading your job applications...")
 
     async def _handle_research(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /research command - shortcut for @researcher daily research"""
