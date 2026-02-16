@@ -75,6 +75,7 @@ cleanup() {
     echo -e "${YELLOW}Shutting down...${NC}"
     kill $PROCESSOR_PID 2>/dev/null || true
     kill $TELEGRAM_PID 2>/dev/null || true
+    kill $PROACTIVE_PID 2>/dev/null || true
     exit 0
 }
 
@@ -97,6 +98,16 @@ TELEGRAM_PID=$!
 echo -e "${GREEN}✓ Telegram bot started (PID: $TELEGRAM_PID)${NC}"
 echo -e "   Logs: logs/telegram.log"
 
+# Wait a moment for Telegram to initialize
+sleep 2
+
+# Start proactive notifications
+echo -e "${BLUE}🔔 Starting proactive notifications...${NC}"
+python -m agency.proactive_notifications > logs/proactive.log 2>&1 &
+PROACTIVE_PID=$!
+echo -e "${GREEN}✓ Proactive notifications started (PID: $PROACTIVE_PID)${NC}"
+echo -e "   Logs: logs/proactive.log"
+
 echo ""
 echo -e "${GREEN}========================================${NC}"
 echo -e "${GREEN}✅ Agency System Running!${NC}"
@@ -105,20 +116,28 @@ echo ""
 echo -e "${BLUE}Processes:${NC}"
 echo -e "  Message Processor: PID $PROCESSOR_PID"
 echo -e "  Telegram Bot: PID $TELEGRAM_PID"
+echo -e "  Proactive Notifications: PID $PROACTIVE_PID"
 echo ""
 echo -e "${BLUE}Logs:${NC}"
 echo -e "  Processor: logs/processor.log"
 echo -e "  Telegram: logs/telegram.log"
+echo -e "  Proactive: logs/proactive.log"
 echo ""
 echo -e "${BLUE}Monitor logs:${NC}"
 echo -e "  tail -f logs/processor.log"
 echo -e "  tail -f logs/telegram.log"
+echo -e "  tail -f logs/proactive.log"
 echo ""
 echo -e "${BLUE}Telegram Bot:${NC}"
 echo -e "  Search for your bot on Telegram and send /start"
 echo ""
-echo -e "${YELLOW}Press Ctrl+C to stop both processes${NC}"
+echo -e "${BLUE}Proactive Notifications:${NC}"
+echo -e "  ☀️  Morning briefing at 8:00 AM daily"
+echo -e "  💼 Job alerts at 6:00 PM daily"
+echo -e "  📧 Email fallback: ${PROACTIVE_EMAIL:-not configured}"
+echo ""
+echo -e "${YELLOW}Press Ctrl+C to stop all processes${NC}"
 echo ""
 
-# Wait for either process to exit
-wait $PROCESSOR_PID $TELEGRAM_PID
+# Wait for any process to exit
+wait $PROCESSOR_PID $TELEGRAM_PID $PROACTIVE_PID

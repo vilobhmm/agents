@@ -83,9 +83,39 @@ class TelegramChannel:
 
         logger.info("Telegram channel initialized")
 
+    async def _register_bot_commands(self):
+        """Register commands with Telegram so they show in the UI menu"""
+        from telegram import BotCommand
+
+        commands = [
+            # CC Commands
+            BotCommand("morning", "☀️ Daily briefing"),
+            BotCommand("briefing", "📋 Daily briefing (same as /morning)"),
+            BotCommand("emails", "📧 Check inbox"),
+            BotCommand("calendar", "📅 Today's schedule"),
+            BotCommand("meeting", "🔜 Next meeting prep"),
+
+            # Job Hunter Commands
+            BotCommand("jobs", "💼 Quick job search"),
+            BotCommand("jobsearch", "🔍 Custom job search"),
+            BotCommand("trackjobs", "📊 View tracked jobs"),
+            BotCommand("applications", "📝 View applications"),
+
+            # System Commands
+            BotCommand("help", "❓ Full command list"),
+            BotCommand("agents", "🤖 List all agents"),
+            BotCommand("status", "📊 System status"),
+        ]
+
+        await self.app.bot.set_my_commands(commands)
+        logger.info(f"Registered {len(commands)} commands with Telegram")
+
     async def start(self):
         """Start Telegram bot (runs forever)"""
         logger.info("Starting Telegram bot...")
+
+        # Register commands with Telegram (so they show in menu)
+        await self._register_bot_commands()
 
         # Start polling outgoing queue in background
         asyncio.create_task(self._poll_outgoing())
