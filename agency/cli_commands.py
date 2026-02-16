@@ -103,7 +103,7 @@ class CoreCommands(BaseCommands):
         """Start Telegram channel"""
         logger.info("Starting Telegram channel...")
 
-        cmd = [sys.executable, "-m", "agency.channels.telegram"]
+        cmd = [sys.executable, "-m", "agency.channels.telegram_channel"]
 
         if detach:
             proc = subprocess.Popen(
