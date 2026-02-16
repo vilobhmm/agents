@@ -7,8 +7,9 @@ import asyncio
 import logging
 import os
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 import anthropic
+from agency.core.tools import ToolRegistry
 
 
 logger = logging.getLogger(__name__)
@@ -49,6 +50,7 @@ class AgentInvoker:
         workspace_path: Path,
         team_context: Optional[Dict] = None,
         reset: bool = False,
+        tool_registry: Optional[ToolRegistry] = None,
     ) -> str:
         """
         Invoke an AI agent with a message.
@@ -59,6 +61,7 @@ class AgentInvoker:
             workspace_path: Root workspace directory
             team_context: Team information (if agent is part of a team)
             reset: Whether to reset conversation history
+            tool_registry: Optional tool registry for agent capabilities
 
         Returns:
             Agent's response
@@ -72,7 +75,7 @@ class AgentInvoker:
         history = self._load_history(history_file) if not reset and history_file.exists() else []
 
         # Build system prompt
-        system_prompt = self._build_system_prompt(agent_dir, agent_config, team_context)
+        system_prompt = self._build_system_prompt(agent_dir, agent_config, team_context, tool_registry)
 
         # Add user message to history
         history.append({
@@ -80,12 +83,13 @@ class AgentInvoker:
             "content": message
         })
 
-        # Invoke AI provider
+        # Invoke AI provider with tool support
         if agent_config.provider == "anthropic":
-            response = await self._invoke_anthropic(
+            response = await self._invoke_anthropic_with_tools(
                 agent_config.model,
                 system_prompt,
-                history
+                history,
+                tool_registry
             )
         elif agent_config.provider == "openai":
             response = await self._invoke_openai(
@@ -173,7 +177,13 @@ Your teammate will receive your message and can respond. Multiple teammates can 
                 lines.append("")
         return "\n".join(lines)
 
-    def _build_system_prompt(self, agent_dir: Path, agent_config, team_context: Optional[Dict]) -> str:
+    def _build_system_prompt(
+        self,
+        agent_dir: Path,
+        agent_config,
+        team_context: Optional[Dict],
+        tool_registry: Optional[ToolRegistry] = None
+    ) -> str:
         """Build system prompt from agent directory files"""
         parts = []
 
@@ -187,10 +197,33 @@ Your teammate will receive your message and can respond. Multiple teammates can 
         if teammates_file.exists():
             parts.append(teammates_file.read_text())
 
+        # Add tool usage instructions if tools are available
+        if tool_registry and tool_registry.tool_schemas:
+            tool_guidance = """
+## Your Tools
+
+You have access to real tools that allow you to take actions. When you need to:
+- Check emails, calendar, or Drive - use your tools
+- Send emails or schedule meetings - use your tools
+- Get briefings or prepare for meetings - use your tools
+
+Use your tools proactively. Don't just describe what you would do - actually do it!
+
+Example:
+User: "Give me my morning briefing"
+You: [Use get_daily_briefing tool, then present the results in a friendly format]
+
+User: "Schedule a meeting with John tomorrow at 2pm"
+You: [Use create_calendar_event tool with the right parameters, then confirm]
+
+Be concise and action-oriented. Execute first, explain second.
+"""
+            parts.append(tool_guidance)
+
         return "\n\n".join(parts)
 
     async def _invoke_anthropic(self, model: str, system_prompt: str, history: list) -> str:
-        """Invoke Anthropic Claude API"""
+        """Invoke Anthropic Claude API (without tools - legacy)"""
         if not self.anthropic_client:
             raise ValueError("Anthropic API key not configured")
 
@@ -212,6 +245,127 @@ Your teammate will receive your message and can respond. Multiple teammates can 
             )
 
             return response.content[0].text
+
+        except Exception as e:
+            logger.error(f"Anthropic API error: {e}")
+            raise
+
+    async def _invoke_anthropic_with_tools(
+        self,
+        model: str,
+        system_prompt: str,
+        history: list,
+        tool_registry: Optional[ToolRegistry] = None
+    ) -> str:
+        """
+        Invoke Anthropic Claude API with tool calling support.
+
+        Handles multi-turn tool use conversations.
+        """
+        if not self.anthropic_client:
+            raise ValueError("Anthropic API key not configured")
+
+        # Map model names
+        model_map = {
+            "sonnet": "claude-sonnet-4-5-20250929",
+            "opus": "claude-opus-4-6",
+            "haiku": "claude-haiku-4-5-20251001",
+        }
+        model_id = model_map.get(model, model)
+
+        # Get tools if available
+        tools = tool_registry.get_tool_schemas() if tool_registry else None
+
+        try:
+            # First API call
+            api_params = {
+                "model": model_id,
+                "max_tokens": 4096,
+                "system": system_prompt,
+                "messages": history
+            }
+
+            if tools:
+                api_params["tools"] = tools
+
+            response = await asyncio.to_thread(
+                self.anthropic_client.messages.create,
+                **api_params
+            )
+
+            # Handle tool use in a loop
+            max_tool_iterations = 5
+            iteration = 0
+
+            while response.stop_reason == "tool_use" and iteration < max_tool_iterations:
+                iteration += 1
+                logger.info(f"Tool use iteration {iteration}")
+
+                # Extract tool uses from response
+                tool_uses = [block for block in response.content if block.type == "tool_use"]
+
+                # Add assistant message to history
+                history.append({
+                    "role": "assistant",
+                    "content": response.content
+                })
+
+                # Execute tools and collect results
+                tool_results = []
+                for tool_use in tool_uses:
+                    tool_name = tool_use.name
+                    tool_input = tool_use.input
+                    logger.info(f"Executing tool: {tool_name} with input: {tool_input}")
+
+                    try:
+                        # Execute the tool
+                        result = await tool_registry.execute_tool(tool_name, tool_input)
+
+                        # Convert result to string if needed
+                        if isinstance(result, dict):
+                            import json
+                            result_content = json.dumps(result, indent=2)
+                        elif isinstance(result, list):
+                            import json
+                            result_content = json.dumps(result, indent=2)
+                        else:
+                            result_content = str(result)
+
+                        tool_results.append({
+                            "type": "tool_result",
+                            "tool_use_id": tool_use.id,
+                            "content": result_content
+                        })
+
+                        logger.info(f"Tool {tool_name} executed successfully")
+
+                    except Exception as e:
+                        logger.error(f"Tool {tool_name} execution failed: {e}")
+                        tool_results.append({
+                            "type": "tool_result",
+                            "tool_use_id": tool_use.id,
+                            "content": f"Error: {str(e)}",
+                            "is_error": True
+                        })
+
+                # Add tool results to history
+                history.append({
+                    "role": "user",
+                    "content": tool_results
+                })
+
+                # Continue conversation with tool results
+                api_params["messages"] = history
+                response = await asyncio.to_thread(
+                    self.anthropic_client.messages.create,
+                    **api_params
+                )
+
+            # Extract final text response
+            text_blocks = [block.text for block in response.content if hasattr(block, 'text')]
+            final_response = "\n\n".join(text_blocks) if text_blocks else ""
+
+            return final_response
 
         except Exception as e:
             logger.error(f"Anthropic API error: {e}")

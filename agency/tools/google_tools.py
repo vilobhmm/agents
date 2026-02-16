@@ -29,8 +29,8 @@ class GoogleTools:
             from openclaw.integrations.google_services import GoogleServices
 
             # Get credentials from environment
-            creds_path = os.getenv("GOOGLE_OAUTH_CREDENTIALS", "google_oauth_credentials.json")
-            token_path = os.getenv("GOOGLE_TOKEN_PATH", "google_token.pickle")
+            creds_path = os.getenv("GOOGLE_OAUTH_CREDENTIALS_FILE", "google_oauth_credentials.json")
+            token_path = os.getenv("GOOGLE_TOKEN_FILE", "google_token.pickle")
 
             self.google_services = GoogleServices(
                 credentials_path=creds_path,
@@ -39,6 +39,7 @@ class GoogleTools:
             logger.info("✅ Google Tools initialized")
         except Exception as e:
             logger.warning(f"Google services not available: {e}")
+            logger.warning("To enable Google services, set up OAuth credentials and environment variables")
             self.google_services = None
 
     async def get_daily_briefing(self) -> Dict:
