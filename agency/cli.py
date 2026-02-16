@@ -69,6 +69,9 @@ For more help: agency <command> --help
         # Messaging commands
         self._add_messaging_commands(subparsers)
 
+        # Debug commands
+        self._add_debug_commands(subparsers)
+
         # Parse arguments
         parsed_args = parser.parse_args(args)
 
@@ -459,6 +462,52 @@ For more help: agency <command> --help
             help='Check for available updates'
         )
 
+    def _add_debug_commands(self, subparsers):
+        """Add debugging and visualization commands"""
+        # Debug command
+        debug_parser = subparsers.add_parser(
+            'debug',
+            help='Debug and visualize system state'
+        )
+        debug_subparsers = debug_parser.add_subparsers(dest='debug_command')
+
+        # Visualize message flow
+        visualize_parser = debug_subparsers.add_parser(
+            'visualize',
+            help='Visualize message flow and queue state'
+        )
+
+        # Check connectivity
+        check_parser = debug_subparsers.add_parser(
+            'check',
+            help='Check system connectivity and configuration'
+        )
+
+        # Trace message
+        trace_parser = debug_subparsers.add_parser(
+            'trace',
+            help='Trace a specific message through the system'
+        )
+        trace_parser.add_argument(
+            'message_id',
+            help='Message ID to trace'
+        )
+
+        # Test agent
+        test_parser = debug_subparsers.add_parser(
+            'test',
+            help='Test agent invocation end-to-end'
+        )
+        test_parser.add_argument(
+            'agent_id',
+            help='Agent ID to test'
+        )
+        test_parser.add_argument(
+            '--message',
+            default='Hello, please respond with a brief status update.',
+            help='Test message to send'
+        )
+
     def _add_messaging_commands(self, subparsers):
         """Add messaging commands"""
         # Send message
@@ -535,7 +584,8 @@ For more help: agency <command> --help
             ConfigCommands,
             PairingCommands,
             UpdateCommands,
-            MessagingCommands
+            MessagingCommands,
+            DebugCommands
         )
 
         # Route to appropriate handler
@@ -577,6 +627,18 @@ For more help: agency <command> --help
             return MessagingCommands().broadcast(args)
         elif args.command == 'history':
             return MessagingCommands().history(args)
+
+        elif args.command == 'debug':
+            debug_cmd = DebugCommands()
+            if args.debug_command == 'visualize':
+                return debug_cmd.visualize(args)
+            elif args.debug_command == 'check':
+                return debug_cmd.check(args)
+            elif args.debug_command == 'test':
+                return debug_cmd.test(args)
+            else:
+                logger.error(f"Unknown debug command: {args.debug_command}")
+                return 1
 
         else:
             logger.error(f"Unknown command: {args.command}")
