@@ -4,8 +4,6 @@
 
 A multi-agent, multi-channel, multi-team system for autonomous AI that works 24/7.
 
-Inspired by [tinyclaw](https://github.com/jlia0/tinyclaw) + [Google Labs CC](https://labs.google/cc)
-
 ---
 
 ## 🚀 Quick Start
