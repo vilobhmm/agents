@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+"""
+Job Search Skill for Claude Code
+
+Makes job hunting SUPER EASY with natural language.
+
+Usage:
+  /job-search "Find Java Developer at TCS in India with 2-3 years"
+  /job-search "Find Software Engineer at Wipro in Bangalore"
+  /job-search "Find ML Engineer with Python and PyTorch"
+  /job-search "Find remote Product Manager jobs"
+
+This skill directly invokes the job_hunter agent with universal search.
+"""
+
+import sys
+import os
+import subprocess
+
+
+def main():
+    """Run job search skill"""
+
+    # Get search query from arguments
+    if len(sys.argv) < 2:
+        print("❌ Please provide a search query!")
+        print("\nUsage:")
+        print('  /job-search "Find Java Developer at TCS in India"')
+        print('  /job-search "Find Software Engineer at Wipro"')
+        print('  /job-search "Find ML Engineer with Python and PyTorch"')
+        return 1
+
+    # Join all arguments as the query
+    query = " ".join(sys.argv[1:])
+
+    print(f"🔍 Searching for: {query}\n")
+    print("=" * 70)
+
+    # Run the job_hunter agent
+    try:
+        result = subprocess.run(
+            [
+                "python", "-m", "agency", "debug", "test", "job_hunter",
+                "--message", query
+            ],
+            cwd=os.path.expanduser("~/claude-code/github/agents"),
+            capture_output=False,
+            text=True
+        )
+
+        return result.returncode
+
+    except Exception as e:
+        print(f"❌ Error running job search: {e}")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
