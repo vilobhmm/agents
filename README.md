@@ -6,7 +6,24 @@ A multi-agent, multi-channel, multi-team system for autonomous AI that works 24/
 
 ---
 
-## 🚀 Quick Start
+## 🚀 **[👉 START HERE: Complete Setup Guide](GETTING_STARTED.md)** 👈
+
+**The definitive step-by-step guide to get ALL agents working with Telegram!**
+
+Includes:
+- ✅ 15-minute setup
+- ✅ Telegram configuration
+- ✅ Google services setup (for CC)
+- ✅ Complete examples for ALL 11 agents
+- ✅ 5 multi-agent team workflows
+- ✅ Troubleshooting
+- ✅ Advanced features
+
+**[📖 Read GETTING_STARTED.md](GETTING_STARTED.md)**
+
+---
+
+## ⚡ Quick Start (Already Setup?)
 
 ```bash
 # 1. Setup
