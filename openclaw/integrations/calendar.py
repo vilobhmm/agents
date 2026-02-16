@@ -24,7 +24,16 @@ class CalendarIntegration:
         self,
         credentials_path: Optional[str] = None,
         token_path: Optional[str] = None,
+        credentials: Optional[Credentials] = None,
     ):
+        """
+        Initialize Calendar integration.
+
+        Args:
+            credentials_path: Path to OAuth credentials JSON (for standalone use)
+            token_path: Path to token file (for standalone use)
+            credentials: Pre-authenticated Credentials object (for unified auth)
+        """
         self.credentials_path = credentials_path or os.getenv(
             "GOOGLE_CALENDAR_CREDENTIALS_PATH", "calendar_credentials.json"
         )
@@ -32,7 +41,13 @@ class CalendarIntegration:
             "GOOGLE_CALENDAR_TOKEN_PATH", "calendar_token.json"
         )
         self.service = None
-        self._authenticate()
+
+        # Use pre-authenticated credentials if provided, otherwise authenticate
+        if credentials:
+            self.service = build("calendar", "v3", credentials=credentials)
+            logger.info("Google Calendar API authenticated successfully (unified auth)")
+        else:
+            self._authenticate()
 
     def _authenticate(self):
         """Authenticate with Google Calendar API"""

@@ -5,6 +5,7 @@ import os
 from typing import Dict, List, Optional
 from datetime import datetime, timedelta
 
+from openclaw.integrations.unified_auth import get_unified_credentials
 from openclaw.integrations.email import EmailIntegration
 from openclaw.integrations.calendar import CalendarIntegration
 from openclaw.integrations.drive import DriveIntegration
@@ -31,7 +32,7 @@ class GoogleServices:
         token_path: Optional[str] = None,
     ):
         """
-        Initialize all Google services.
+        Initialize all Google services with unified authentication.
 
         Args:
             credentials_path: Path to OAuth credentials (defaults to google_oauth_credentials.json)
@@ -39,18 +40,27 @@ class GoogleServices:
         """
         logger.info("Initializing Google Services...")
 
-        # Use unified credentials for all Google services
-        creds = credentials_path or os.getenv(
+        # Get unified credentials with ALL required scopes
+        creds_path = credentials_path or os.getenv(
             "GOOGLE_OAUTH_CREDENTIALS", "google_oauth_credentials.json"
         )
         token = token_path or os.getenv(
             "GOOGLE_TOKEN_PATH", "google_token.pickle"
         )
 
-        # Initialize all services with the same credentials
-        self.gmail = EmailIntegration(creds, token)
-        self.calendar = CalendarIntegration(creds, token)
-        self.drive = DriveIntegration(creds, token)
+        # Get unified authenticated credentials
+        logger.info("Authenticating with Google APIs (unified auth)...")
+        unified_creds = get_unified_credentials(creds_path, token)
+
+        if not unified_creds:
+            logger.error("❌ Failed to authenticate with Google services")
+            logger.error("Please ensure google_oauth_credentials.json exists")
+            raise RuntimeError("Google authentication failed")
+
+        # Initialize all services with the same authenticated credentials
+        self.gmail = EmailIntegration(credentials=unified_creds)
+        self.calendar = CalendarIntegration(credentials=unified_creds)
+        self.drive = DriveIntegration(credentials=unified_creds)
 
         logger.info("✅ Google Services ready (Gmail, Calendar, Drive)")
 
