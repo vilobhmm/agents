@@ -70,6 +70,7 @@ class ConversationManager:
             original_message_id=message.message_id,
             pending=1,  # Starts with 1 (the initial agent)
             team_context=team_context,
+            metadata=message.metadata,  # Preserve original metadata (chat_id, etc.)
         )
 
         self.conversations[conv_id] = conversation

@@ -107,6 +107,7 @@ class Conversation:
     outgoing_mentions: Dict[str, int] = field(default_factory=dict)  # Track per-agent mentions
     created_at: float = field(default_factory=lambda: datetime.now().timestamp())
     max_messages: int = 50              # Loop protection limit
+    metadata: Dict = field(default_factory=dict)  # Original message metadata (chat_id, etc.)
 
 
 @dataclass
