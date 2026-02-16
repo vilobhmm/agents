@@ -13,7 +13,7 @@ import os
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
-from agency.core.types import MessageData
+from agency.core.types import MessageData, AgencyConfig
 from agency.core.queue import FileQueue
 
 
@@ -35,7 +35,8 @@ class TelegramChannel:
         self,
         bot_token: str,
         queue: FileQueue,
-        allowed_users: Optional[list] = None
+        allowed_users: Optional[list] = None,
+        config: Optional[AgencyConfig] = None
     ):
         """
         Initialize Telegram channel.
@@ -44,10 +45,12 @@ class TelegramChannel:
             bot_token: Telegram bot token
             queue: File queue instance
             allowed_users: List of allowed user IDs (if None, allow all)
+            config: Agency configuration (for dynamic help generation)
         """
         self.bot_token = bot_token
         self.queue = queue
         self.allowed_users = set(allowed_users) if allowed_users else None
+        self.config = config
 
         # Create Telegram application
         self.app = Application.builder().token(bot_token).build()
@@ -97,8 +100,38 @@ class TelegramChannel:
         )
 
     async def _handle_help(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle /help command"""
-        help_text = """
+        """Handle /help command - dynamically generated from agency config"""
+
+        if self.config:
+            # Generate dynamic help from actual config
+            help_text = "🤖 **Agency - Your AI Assistant Team**\n\n"
+
+            # Available Agents section
+            if self.config.agents:
+                help_text += "**Available Agents:**\n"
+                for agent_id, agent in self.config.agents.items():
+                    # Create a short description from the first line of personality
+                    desc = agent.personality.split('.')[0] if agent.personality else agent.name
+                    help_text += f"• `@{agent_id}` - {agent.name}\n"
+                help_text += "\n"
+
+            # Available Teams section
+            if self.config.teams:
+                help_text += "**Available Teams:**\n"
+                for team_id, team in self.config.teams.items():
+                    desc = team.description if team.description else team.name
+                    help_text += f"• `@{team_id}` - {desc}\n"
+                help_text += "\n"
+
+            # Usage examples
+            help_text += "**Try:**\n"
+            help_text += "`@cc Good morning briefing`\n"
+            help_text += "`@job_hunter Find ML Engineer roles`\n"
+            help_text += "`@researcher What's new in AI?`\n\n"
+            help_text += "✅ Your agency is running!"
+        else:
+            # Fallback help if config not provided
+            help_text = """
 **Available Commands:**
 
 • `/start` - Start the bot
@@ -113,16 +146,9 @@ Use `@agent_id` to route messages:
 @writer Draft a newsletter
 ```
 
-**Available Agents:**
-• `@researcher` - Research assistant (AI news, papers, trends)
-• `@social` - Social media manager (Twitter, LinkedIn)
-• `@writer` - Content writer (newsletters, articles)
-
-**Teams:**
-• `@content` - Full content creation team
-
 Just message me naturally with an @mention!
 """
+
         await update.message.reply_text(help_text)
 
     async def _handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -207,6 +233,7 @@ def main():
     """Main entry point for running Telegram channel"""
     import sys
     from dotenv import load_dotenv
+    from agency.config import load_config
 
     # Load environment variables
     load_dotenv()
@@ -226,6 +253,14 @@ def main():
     allowed_users_str = os.getenv("TELEGRAM_ALLOWED_USERS", "")
     allowed_users = [u.strip() for u in allowed_users_str.split(",") if u.strip()]
 
+    # Load agency config for dynamic help
+    try:
+        agency_config = load_config()
+        logger.info(f"Loaded agency config: {len(agency_config.agents)} agents, {len(agency_config.teams)} teams")
+    except Exception as e:
+        logger.warning(f"Could not load agency config: {e}. Help will use fallback.")
+        agency_config = None
+
     # Create queue (use default path)
     queue_path = Path.home() / ".agency" / "queue"
     queue = FileQueue(queue_path)
@@ -234,7 +269,8 @@ def main():
     channel = TelegramChannel(
         bot_token=bot_token,
         queue=queue,
-        allowed_users=allowed_users if allowed_users else None
+        allowed_users=allowed_users if allowed_users else None,
+        config=agency_config
     )
 
     # Run
