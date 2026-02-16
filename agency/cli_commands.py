@@ -1234,6 +1234,7 @@ class DebugCommands(BaseCommands):
         from agency.config import load_config
         from agency.core.agent import AgentInvoker
         from agency.core.types import MessageData
+        from agency.core.tools import create_google_tools_registry
         import asyncio
         import time
 
@@ -1257,6 +1258,15 @@ class DebugCommands(BaseCommands):
         logger.info(f"✅ Agent found: {agent_config.name}")
         logger.info(f"   Provider: {agent_config.provider}")
         logger.info(f"   Model: {agent_config.model}")
+
+        # Create tool registry for agents that need it
+        tool_registry = None
+        if args.agent_id in ['cc', 'assistant', 'action_taker']:
+            try:
+                tool_registry = create_google_tools_registry()
+                logger.info(f"   Tools: {len(tool_registry.tool_schemas)} Google tools loaded")
+            except Exception as e:
+                logger.warning(f"   Tools: Could not load Google tools: {e}")
 
         # Create invoker
         invoker = AgentInvoker(
@@ -1287,7 +1297,8 @@ class DebugCommands(BaseCommands):
                     message=args.message,
                     workspace_path=config.workspace_path,
                     team_context=None,
-                    reset=False
+                    reset=False,
+                    tool_registry=tool_registry
                 )
             )
 
