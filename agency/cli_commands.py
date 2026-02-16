@@ -1079,3 +1079,220 @@ class MessagingCommands(BaseCommands):
             logger.info("")
 
         return 0
+
+
+class DebugCommands(BaseCommands):
+    """Debug and visualization commands"""
+
+    def visualize(self, args):
+        """Visualize message flow and queue state"""
+        from agency.core.queue import FileQueue
+        from agency.config import load_config
+        from pathlib import Path
+        import time as time_module
+
+        logger.info("🔍 Agency System Visualization")
+        logger.info("=" * 70)
+
+        # Load config
+        try:
+            config = load_config()
+            logger.info(f"✅ Config loaded: {len(config.agents)} agents, {len(config.teams)} teams")
+        except Exception as e:
+            logger.error(f"❌ Failed to load config: {e}")
+            return 1
+
+        # Check queue
+        queue = FileQueue(config.queue_path)
+        logger.info(f"\n📬 Queue Path: {config.queue_path}")
+
+        # Count messages in each queue
+        incoming_count = len(list(queue.iter_incoming()))
+        outgoing_count = len(list(queue.iter_outgoing()))
+
+        logger.info(f"\n📊 Queue Status:")
+        logger.info(f"  Incoming: {incoming_count} messages")
+        logger.info(f"  Outgoing: {outgoing_count} messages")
+
+        # Show recent messages
+        if incoming_count > 0:
+            logger.info(f"\n📥 Incoming Messages:")
+            for i, msg in enumerate(queue.iter_incoming()):
+                if i >= 5:  # Show max 5
+                    break
+                logger.info(f"  {i+1}. From: {msg.data.sender}")
+                logger.info(f"     Message: {msg.data.message[:60]}...")
+                logger.info(f"     Time: {time_module.strftime('%Y-%m-%d %H:%M:%S', time_module.localtime(msg.data.timestamp))}")
+
+        if outgoing_count > 0:
+            logger.info(f"\n📤 Outgoing Messages:")
+            for i, msg in enumerate(queue.iter_outgoing()):
+                if i >= 5:  # Show max 5
+                    break
+                logger.info(f"  {i+1}. To: {msg.data.sender}")
+                logger.info(f"     Message: {msg.data.message[:60]}...")
+
+        # System status
+        logger.info(f"\n🔧 System Status:")
+        pids = self.load_pids()
+        if pids.get("processor"):
+            logger.info(f"  ✅ Processor: Running (PID: {pids['processor']})")
+        else:
+            logger.info(f"  ❌ Processor: Not running")
+
+        if pids.get("telegram"):
+            logger.info(f"  ✅ Telegram: Running (PID: {pids['telegram']})")
+        else:
+            logger.info(f"  ⚠️  Telegram: Not running")
+
+        # Agent status
+        logger.info(f"\n🤖 Agents:")
+        for agent_id, agent in list(config.agents.items())[:10]:
+            logger.info(f"  • @{agent_id} - {agent.name} ({agent.model})")
+
+        # Teams
+        if config.teams:
+            logger.info(f"\n👥 Teams:")
+            for team_id, team in config.teams.items():
+                logger.info(f"  • @{team_id} - {team.name} (leader: {team.leader_agent})")
+
+        logger.info("\n" + "=" * 70)
+        logger.info("💡 Tip: Use 'agency debug test <agent_id>' to test an agent end-to-end")
+
+        return 0
+
+    def check(self, args):
+        """Check system connectivity and configuration"""
+        from agency.config import load_config
+        import os
+
+        logger.info("🔍 System Check")
+        logger.info("=" * 70)
+
+        # Check environment variables
+        logger.info("\n📋 Environment Variables:")
+        env_vars = {
+            "ANTHROPIC_API_KEY": os.getenv("ANTHROPIC_API_KEY"),
+            "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY"),
+            "TELEGRAM_BOT_TOKEN": os.getenv("TELEGRAM_BOT_TOKEN"),
+            "TELEGRAM_ALLOWED_USERS": os.getenv("TELEGRAM_ALLOWED_USERS"),
+            "GOOGLE_OAUTH_CREDENTIALS": os.getenv("GOOGLE_OAUTH_CREDENTIALS"),
+        }
+
+        for key, value in env_vars.items():
+            if value:
+                masked = value[:10] + "..." if len(value) > 10 else value
+                logger.info(f"  ✅ {key}: {masked}")
+            else:
+                logger.info(f"  ❌ {key}: Not set")
+
+        # Check config
+        logger.info("\n🔧 Configuration:")
+        try:
+            config = load_config()
+            logger.info(f"  ✅ Agents: {len(config.agents)}")
+            logger.info(f"  ✅ Teams: {len(config.teams)}")
+            logger.info(f"  ✅ Queue: {config.queue_path}")
+        except Exception as e:
+            logger.error(f"  ❌ Config load failed: {e}")
+            return 1
+
+        # Check queue directories
+        logger.info("\n📁 Queue Directories:")
+        for subdir in ["incoming", "processing", "outgoing"]:
+            path = config.queue_path / subdir
+            if path.exists():
+                logger.info(f"  ✅ {subdir}: {path}")
+            else:
+                logger.warning(f"  ⚠️  {subdir}: Missing ({path})")
+
+        # Check Google credentials (for CC agent)
+        logger.info("\n🔑 Google Services (for CC agent):")
+        google_creds = os.getenv("GOOGLE_OAUTH_CREDENTIALS", "google_oauth_credentials.json")
+        google_token = os.getenv("GOOGLE_TOKEN_PATH", "google_token.pickle")
+
+        if Path(google_creds).exists():
+            logger.info(f"  ✅ Credentials: {google_creds}")
+        else:
+            logger.warning(f"  ⚠️  Credentials: Not found ({google_creds})")
+
+        if Path(google_token).exists():
+            logger.info(f"  ✅ Token: {google_token}")
+        else:
+            logger.warning(f"  ⚠️  Token: Not found ({google_token})")
+
+        logger.info("\n" + "=" * 70)
+        return 0
+
+    def test(self, args):
+        """Test agent invocation end-to-end"""
+        from agency.config import load_config
+        from agency.core.agent import AgentInvoker
+        from agency.core.types import MessageData
+        import asyncio
+        import time
+
+        logger.info(f"🧪 Testing Agent: @{args.agent_id}")
+        logger.info("=" * 70)
+
+        # Load config
+        try:
+            config = load_config()
+        except Exception as e:
+            logger.error(f"❌ Failed to load config: {e}")
+            return 1
+
+        # Validate agent exists
+        if args.agent_id not in config.agents:
+            logger.error(f"❌ Agent '{args.agent_id}' not found")
+            logger.info(f"Available agents: {', '.join(config.agents.keys())}")
+            return 1
+
+        agent_config = config.agents[args.agent_id]
+        logger.info(f"✅ Agent found: {agent_config.name}")
+        logger.info(f"   Provider: {agent_config.provider}")
+        logger.info(f"   Model: {agent_config.model}")
+
+        # Create invoker
+        invoker = AgentInvoker(
+            anthropic_api_key=config.anthropic_api_key,
+            openai_api_key=config.openai_api_key
+        )
+
+        # Create test message
+        message_data = MessageData(
+            channel="test",
+            sender="test_user",
+            sender_id="test_123",
+            message=args.message,
+            timestamp=time.time(),
+            message_id=f"test_{int(time.time()*1000)}",
+            metadata={}
+        )
+
+        logger.info(f"\n📨 Sending test message:")
+        logger.info(f"   Message: {args.message}")
+
+        # Invoke agent
+        try:
+            logger.info(f"\n⏳ Invoking agent...")
+            response = asyncio.run(
+                invoker.invoke(
+                    agent_config=agent_config,
+                    message=message_data,
+                    conversation_history=[]
+                )
+            )
+
+            logger.info(f"\n✅ Response received!")
+            logger.info("=" * 70)
+            logger.info(response)
+            logger.info("=" * 70)
+
+            return 0
+
+        except Exception as e:
+            logger.error(f"\n❌ Agent invocation failed: {e}")
+            import traceback
+            traceback.print_exc()
+            return 1
