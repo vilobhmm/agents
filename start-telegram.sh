@@ -83,7 +83,7 @@ trap cleanup SIGINT SIGTERM
 
 # Start message processor in background
 echo -e "${BLUE}🔄 Starting message processor...${NC}"
-python -m agency process > logs/processor.log 2>&1 &
+python -m agency.processor > logs/processor.log 2>&1 &
 PROCESSOR_PID=$!
 echo -e "${GREEN}✓ Message processor started (PID: $PROCESSOR_PID)${NC}"
 echo -e "   Logs: logs/processor.log"
