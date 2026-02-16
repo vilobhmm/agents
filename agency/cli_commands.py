@@ -1107,23 +1107,28 @@ class DebugCommands(BaseCommands):
         logger.info(f"\n📬 Queue Path: {config.queue_path}")
 
         # Count messages in each queue
-        incoming_count = len(list(queue.iter_incoming()))
-        outgoing_count = len(list(queue.iter_outgoing()))
+        incoming_count = queue.get_queue_size("incoming")
+        processing_count = queue.get_queue_size("processing")
+        outgoing_count = queue.get_queue_size("outgoing")
 
         logger.info(f"\n📊 Queue Status:")
         logger.info(f"  Incoming: {incoming_count} messages")
+        logger.info(f"  Processing: {processing_count} messages")
         logger.info(f"  Outgoing: {outgoing_count} messages")
 
-        # Show recent messages
+        # Show recent incoming messages
         if incoming_count > 0:
             logger.info(f"\n📥 Incoming Messages:")
-            for i, msg in enumerate(queue.iter_incoming()):
+            for i, file_path in enumerate(sorted(queue.incoming.glob("*.json"))):
                 if i >= 5:  # Show max 5
                     break
-                logger.info(f"  {i+1}. From: {msg.data.sender}")
-                logger.info(f"     Message: {msg.data.message[:60]}...")
-                logger.info(f"     Time: {time_module.strftime('%Y-%m-%d %H:%M:%S', time_module.localtime(msg.data.timestamp))}")
+                with open(file_path, 'r') as f:
+                    data = json.load(f)
+                logger.info(f"  {i+1}. From: {data.get('sender', 'unknown')}")
+                logger.info(f"     Message: {data.get('message', '')[:60]}...")
+                logger.info(f"     Time: {time_module.strftime('%Y-%m-%d %H:%M:%S', time_module.localtime(data.get('timestamp', 0)))}")
 
+        # Show recent outgoing messages
         if outgoing_count > 0:
             logger.info(f"\n📤 Outgoing Messages:")
             for i, msg in enumerate(queue.iter_outgoing()):
@@ -1277,10 +1282,12 @@ class DebugCommands(BaseCommands):
         try:
             logger.info(f"\n⏳ Invoking agent...")
             response = asyncio.run(
-                invoker.invoke(
+                invoker.invoke_agent(
                     agent_config=agent_config,
-                    message=message_data,
-                    conversation_history=[]
+                    message=args.message,
+                    workspace_path=config.workspace_path,
+                    team_context=None,
+                    reset=False
                 )
             )
 
