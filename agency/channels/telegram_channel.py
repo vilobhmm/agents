@@ -201,3 +201,45 @@ Just message me naturally with an @mention!
             except Exception as e:
                 logger.error(f"Error in outgoing poller: {e}", exc_info=True)
                 await asyncio.sleep(1)
+
+
+def main():
+    """Main entry point for running Telegram channel"""
+    import sys
+    from dotenv import load_dotenv
+
+    # Load environment variables
+    load_dotenv()
+
+    # Setup logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+
+    # Get configuration from environment
+    bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
+    if not bot_token:
+        logger.error("TELEGRAM_BOT_TOKEN not found in environment")
+        sys.exit(1)
+
+    allowed_users_str = os.getenv("TELEGRAM_ALLOWED_USERS", "")
+    allowed_users = [u.strip() for u in allowed_users_str.split(",") if u.strip()]
+
+    # Create queue (use default path)
+    queue_path = Path.home() / ".agency" / "queue"
+    queue = FileQueue(queue_path)
+
+    # Create and start channel
+    channel = TelegramChannel(
+        bot_token=bot_token,
+        queue=queue,
+        allowed_users=allowed_users if allowed_users else None
+    )
+
+    # Run
+    asyncio.run(channel.start())
+
+
+if __name__ == '__main__':
+    main()
