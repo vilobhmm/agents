@@ -1139,7 +1139,7 @@ class DebugCommands(BaseCommands):
 
         # System status
         logger.info(f"\n🔧 System Status:")
-        pids = self.load_pids()
+        pids = self._load_pids()
         if pids.get("processor"):
             logger.info(f"  ✅ Processor: Running (PID: {pids['processor']})")
         else:
