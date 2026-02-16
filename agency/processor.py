@@ -291,7 +291,14 @@ class AgencyProcessor:
         # Get aggregated response
         response_text = self.conv_manager.get_aggregated_response(conversation.id)
 
-        # Create outgoing message
+        # Create outgoing message with preserved metadata (chat_id, etc.)
+        metadata = {
+            **conversation.metadata,  # Preserve original metadata (chat_id, user_id, etc.)
+            "conversation_id": conversation.id,
+            "original_message": conversation.original_message,
+            "agents": [step.agent_id for step in conversation.responses],
+        }
+
         outgoing_message = MessageData(
             channel=channel,
             sender=conversation.sender,
@@ -299,11 +306,7 @@ class AgencyProcessor:
             message=response_text,
             timestamp=time.time(),
             message_id=conversation.original_message_id,
-            metadata={
-                "conversation_id": conversation.id,
-                "original_message": conversation.original_message,
-                "agents": [step.agent_id for step in conversation.responses],
-            }
+            metadata=metadata
         )
 
         # Enqueue to outgoing
