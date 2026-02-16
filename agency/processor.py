@@ -365,7 +365,7 @@ async def main():
     logger.info("")
 
     try:
-        await processor.run()
+        await processor.start()  # Changed from run() to start()
     except KeyboardInterrupt:
         logger.info("Shutting down processor...")
     except Exception as e:
