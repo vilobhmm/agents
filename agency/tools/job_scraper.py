@@ -304,6 +304,172 @@ class JobScraper:
             logger.error(f"Error accessing Meta jobs: {e}")
             return []
 
+    # ===== Indian IT Services Companies =====
+
+    async def scrape_infosys(self, role_filter: Optional[str] = None, location_filter: Optional[str] = None) -> List[Dict]:
+        """
+        Scrape Infosys jobs.
+
+        Infosys uses their own career portal with search functionality.
+
+        Args:
+            role_filter: Filter by role keywords
+            location_filter: Filter by location
+
+        Returns:
+            List of job dictionaries with direct application links
+        """
+        logger.info("Scraping Infosys jobs...")
+
+        try:
+            # Infosys career search page
+            base_url = "https://www.infosys.com/careers/job-listing.html"
+
+            # Build search URL with filters
+            params = []
+            if role_filter:
+                # Common keywords mapping
+                keywords = role_filter.lower()
+                if "java" in keywords:
+                    params.append("keyword=java")
+                if "full stack" in keywords or "fullstack" in keywords:
+                    params.append("keyword=fullstack")
+                if "software" in keywords:
+                    params.append("keyword=software")
+
+            if location_filter:
+                if "india" in location_filter.lower():
+                    params.append("country=india")
+
+            search_url = base_url
+            if params:
+                search_url = f"{base_url}?{'&'.join(params)}"
+
+            # Return structured link for user to search
+            jobs = [{
+                "company": "Infosys",
+                "title": f"Java Full Stack Developer / Software Engineer roles",
+                "location": "India (Multiple cities)",
+                "url": search_url,
+                "apply_url": search_url,
+                "description": "Search for Java, Full Stack, and Software Developer roles with 2-3 years experience",
+                "experience_level": "2-3 years",
+                "source": "Infosys Careers Portal",
+                "instructions": "Click the link to search available positions. You can filter by location (Bangalore, Hyderabad, Pune, etc.) and experience level on the careers page."
+            }]
+
+            logger.info(f"Infosys careers link provided")
+            return jobs
+
+        except Exception as e:
+            logger.error(f"Error accessing Infosys jobs: {e}")
+            return []
+
+    async def scrape_tcs(self, role_filter: Optional[str] = None, location_filter: Optional[str] = None) -> List[Dict]:
+        """
+        Scrape TCS (Tata Consultancy Services) jobs.
+
+        TCS uses their iBegin platform and TCS Careers portal.
+
+        Args:
+            role_filter: Filter by role keywords
+            location_filter: Filter by location
+
+        Returns:
+            List of job dictionaries
+        """
+        logger.info("Scraping TCS jobs...")
+
+        try:
+            # TCS careers page for experienced professionals
+            base_url = "https://www.tcs.com/careers/tcs-experienced-hiring"
+            search_url = "https://ibegin.tcs.com/iBegin/jobs/search"
+
+            jobs = [{
+                "company": "TCS (Tata Consultancy Services)",
+                "title": "Java Developer / Full Stack Engineer roles",
+                "location": "India (Multiple locations)",
+                "url": search_url,
+                "apply_url": search_url,
+                "description": "Search for Java, Full Stack Developer, and Software Engineer positions with 2-3 years experience",
+                "experience_level": "2-3 years",
+                "source": "TCS iBegin Portal",
+                "instructions": "1. Visit TCS iBegin portal\n2. Search for 'Java Developer' or 'Full Stack'\n3. Filter by India location\n4. Select 2-3 years experience\n5. Apply directly"
+            }]
+
+            # Also provide main careers page
+            jobs.append({
+                "company": "TCS",
+                "title": "Experienced Professional Hiring",
+                "location": "India",
+                "url": base_url,
+                "apply_url": base_url,
+                "description": "Browse all TCS openings for experienced professionals",
+                "source": "TCS Careers"
+            })
+
+            logger.info(f"TCS careers links provided")
+            return jobs
+
+        except Exception as e:
+            logger.error(f"Error accessing TCS jobs: {e}")
+            return []
+
+    async def scrape_accenture(self, role_filter: Optional[str] = None, location_filter: Optional[str] = None) -> List[Dict]:
+        """
+        Scrape Accenture jobs.
+
+        Accenture has a comprehensive job search portal.
+
+        Args:
+            role_filter: Filter by role keywords
+            location_filter: Filter by location
+
+        Returns:
+            List of job dictionaries
+        """
+        logger.info("Scraping Accenture jobs...")
+
+        try:
+            # Accenture India careers with pre-applied filters
+            # Build search URL with filters for India, Technology, 2-3 years exp
+            base_url = "https://www.accenture.com/in-en/careers/jobsearch"
+
+            # URL with common filters for Java/Full Stack roles in India
+            search_params = "?jk=java+developer&loc=India"
+            search_url = base_url + search_params
+
+            jobs = [{
+                "company": "Accenture",
+                "title": "Java Full Stack Developer / Software Engineer",
+                "location": "India (Bangalore, Hyderabad, Pune, Gurgaon, Chennai)",
+                "url": search_url,
+                "apply_url": search_url,
+                "description": "Search Java, Full Stack, and Software Development roles",
+                "experience_level": "2-3 years",
+                "source": "Accenture Careers Portal",
+                "instructions": "1. Visit Accenture job search\n2. Enter keywords: 'Java Developer' or 'Full Stack'\n3. Select India as location\n4. Filter by Technology domain\n5. Select 2-3 years experience range\n6. Click Apply on matching positions"
+            }]
+
+            # Alternative search for full stack roles
+            fullstack_url = base_url + "?jk=full+stack+developer&loc=India"
+            jobs.append({
+                "company": "Accenture",
+                "title": "Full Stack Developer roles",
+                "location": "India",
+                "url": fullstack_url,
+                "apply_url": fullstack_url,
+                "description": "Full Stack development positions across India",
+                "source": "Accenture Careers"
+            })
+
+            logger.info(f"Accenture careers links provided")
+            return jobs
+
+        except Exception as e:
+            logger.error(f"Error accessing Accenture jobs: {e}")
+            return []
+
     # ===== Helper Methods =====
 
     def _parse_date(self, date_str: Optional[str]) -> str:
@@ -332,11 +498,15 @@ class JobScraper:
         Args:
             role_filter: Filter by role keywords (e.g., "engineer", "ML", "research")
             location_filter: Filter by location (e.g., "San Francisco", "Remote")
-            companies: List of companies to search (defaults to all)
+            companies: List of companies to search (defaults to all), or comma-separated string
 
         Returns:
             Aggregated list of all jobs
         """
+        # Handle comma-separated string input
+        if companies and isinstance(companies, str):
+            companies = [c.strip() for c in companies.split(',')]
+
         if not companies:
             companies = ["anthropic", "openai", "deepmind", "meta"]
 
@@ -345,8 +515,19 @@ class JobScraper:
         # Scrape all companies in parallel
         tasks = []
 
+        # AI/Research companies
         if "anthropic" in companies:
             tasks.append(self.scrape_anthropic(role_filter, location_filter))
+
+        # Indian IT Services
+        for company in companies:
+            company_lower = company.lower().strip()
+            if "infosys" in company_lower:
+                tasks.append(self.scrape_infosys(role_filter, location_filter))
+            elif "tcs" in company_lower or "tata" in company_lower:
+                tasks.append(self.scrape_tcs(role_filter, location_filter))
+            elif "accenture" in company_lower:
+                tasks.append(self.scrape_accenture(role_filter, location_filter))
         if "openai" in companies:
             tasks.append(self.scrape_openai(role_filter, location_filter))
         if "deepmind" in companies:
