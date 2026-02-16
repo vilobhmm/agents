@@ -277,7 +277,7 @@ Be concise and action-oriented. Execute first, explain second.
         tools = tool_registry.get_tool_schemas() if tool_registry else None
 
         try:
-            # First API call
+            # First API call with retry logic
             api_params = {
                 "model": model_id,
                 "max_tokens": 4096,
@@ -288,10 +288,39 @@ Be concise and action-oriented. Execute first, explain second.
             if tools:
                 api_params["tools"] = tools
 
-            response = await asyncio.to_thread(
-                self.anthropic_client.messages.create,
-                **api_params
-            )
+            # Retry logic for connection errors
+            max_retries = 3
+            retry_delay = 1  # Start with 1 second
+
+            for attempt in range(max_retries):
+                try:
+                    response = await asyncio.to_thread(
+                        self.anthropic_client.messages.create,
+                        **api_params
+                    )
+                    break  # Success, exit retry loop
+
+                except Exception as e:
+                    error_msg = str(e)
+                    # Check if it's a connection/SSL error
+                    if "Connection error" in error_msg or "SSL" in error_msg or "ReadError" in error_msg:
+                        if attempt < max_retries - 1:
+                            logger.warning(f"Connection error on attempt {attempt + 1}/{max_retries}. Retrying in {retry_delay}s...")
+                            await asyncio.sleep(retry_delay)
+                            retry_delay *= 2  # Exponential backoff
+                            continue
+                        else:
+                            # Last attempt failed
+                            logger.error("All retry attempts failed. Please check your network connection.")
+                            logger.error("Troubleshooting steps:")
+                            logger.error("  1. Check your internet connection")
+                            logger.error("  2. Disable VPN/proxy temporarily")
+                            logger.error("  3. Verify your API key is valid")
+                            logger.error("  4. Check if you're behind a corporate firewall")
+                            raise
+                    else:
+                        # Not a connection error, raise immediately
+                        raise
 
             # Handle tool use in a loop
             max_tool_iterations = 5
@@ -354,12 +383,27 @@ Be concise and action-oriented. Execute first, explain second.
                     "content": tool_results
                 })
 
-                # Continue conversation with tool results
+                # Continue conversation with tool results (with retry)
                 api_params["messages"] = history
-                response = await asyncio.to_thread(
-                    self.anthropic_client.messages.create,
-                    **api_params
-                )
+
+                for attempt in range(max_retries):
+                    try:
+                        response = await asyncio.to_thread(
+                            self.anthropic_client.messages.create,
+                            **api_params
+                        )
+                        break  # Success
+                    except Exception as e:
+                        error_msg = str(e)
+                        if "Connection error" in error_msg or "SSL" in error_msg or "ReadError" in error_msg:
+                            if attempt < max_retries - 1:
+                                logger.warning(f"Connection error in tool loop. Retrying...")
+                                await asyncio.sleep(retry_delay)
+                                continue
+                            else:
+                                raise
+                        else:
+                            raise
 
             # Extract final text response
             text_blocks = [block.text for block in response.content if hasattr(block, 'text')]

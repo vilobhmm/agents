@@ -291,3 +291,136 @@ def create_google_tools_registry() -> ToolRegistry:
     logger.info(f"Created Google Tools registry with {len(registry.tool_schemas)} tools")
 
     return registry
+
+
+def create_job_search_tools_registry() -> ToolRegistry:
+    """
+    Create tool registry with job search tools for job_hunter agent.
+
+    Returns:
+        ToolRegistry with job search tools
+    """
+    from agency.tools.job_search_tools import JobSearchTools
+
+    registry = ToolRegistry()
+    job_tools = JobSearchTools()
+
+    # Register job scraping tools
+    registry.register_tool(
+        job_tools.scrape_anthropic_jobs,
+        name="scrape_anthropic_jobs",
+        description="Scrape current job openings from Anthropic careers page. Returns real-time job listings.",
+        parameter_descriptions={
+            "role_filter": "Optional: Filter by role keywords (e.g., 'engineer', 'research', 'safety')"
+        }
+    )
+
+    registry.register_tool(
+        job_tools.scrape_openai_jobs,
+        name="scrape_openai_jobs",
+        description="Scrape current job openings from OpenAI careers page. Returns real-time job listings.",
+        parameter_descriptions={
+            "role_filter": "Optional: Filter by role keywords"
+        }
+    )
+
+    registry.register_tool(
+        job_tools.scrape_deepmind_jobs,
+        name="scrape_deepmind_jobs",
+        description="Scrape current job openings from DeepMind careers page. Returns real-time job listings.",
+        parameter_descriptions={
+            "role_filter": "Optional: Filter by role keywords"
+        }
+    )
+
+    registry.register_tool(
+        job_tools.search_all_companies,
+        name="search_all_companies",
+        description="Search jobs across all major AI companies (Anthropic, OpenAI, DeepMind, etc.). Returns aggregated results.",
+        parameter_descriptions={
+            "role_filter": "Optional: Filter by role keywords",
+            "location_filter": "Optional: Filter by location (e.g., 'San Francisco', 'Remote')"
+        }
+    )
+
+    # Register job tracking tools
+    registry.register_tool(
+        job_tools.track_job,
+        name="track_job",
+        description="Add a job to your tracking list. Use this to save jobs you're interested in.",
+        parameter_descriptions={
+            "job": "Job details dictionary (must include at minimum: title, company, job_id)"
+        }
+    )
+
+    registry.register_tool(
+        job_tools.get_tracked_jobs,
+        name="get_tracked_jobs",
+        description="Get all jobs you're currently tracking. View your saved opportunities.",
+        parameter_descriptions={
+            "status_filter": "Optional: Filter by status (interested, applied, interviewing, offer, rejected)"
+        }
+    )
+
+    registry.register_tool(
+        job_tools.update_job_status,
+        name="update_job_status",
+        description="Update the status of a tracked job. Use when you apply, get an interview, receive an offer, etc.",
+        parameter_descriptions={
+            "job_id": "Unique job identifier",
+            "status": "New status (interested, applied, interviewing, offer, rejected)",
+            "notes": "Optional notes about the update"
+        }
+    )
+
+    # Register application tracking tools
+    registry.register_tool(
+        job_tools.record_application,
+        name="record_application",
+        description="Record that you submitted an application for a job. Automatically updates job status to 'applied'.",
+        parameter_descriptions={
+            "job_id": "Job identifier",
+            "application_date": "Optional: Date of application (defaults to today)",
+            "application_url": "Optional: URL of application portal",
+            "referral": "Optional: Name of person who referred you"
+        }
+    )
+
+    registry.register_tool(
+        job_tools.get_applications,
+        name="get_applications",
+        description="Get all your job applications and their current status.",
+        parameter_descriptions={
+            "status_filter": "Optional: Filter by status"
+        }
+    )
+
+    # Register preference tools
+    registry.register_tool(
+        job_tools.save_preferences,
+        name="save_preferences",
+        description="Save your job search preferences (roles, locations, companies, etc.). Used to personalize recommendations.",
+        parameter_descriptions={
+            "preferences": "Dictionary with role_keywords, locations, companies, seniority_level, etc."
+        }
+    )
+
+    registry.register_tool(
+        job_tools.get_preferences,
+        name="get_preferences",
+        description="Get your saved job search preferences.",
+        parameter_descriptions={}
+    )
+
+    registry.register_tool(
+        job_tools.match_jobs_to_preferences,
+        name="match_jobs_to_preferences",
+        description="Match a list of jobs to your preferences and rank by fit. Returns jobs sorted by match score.",
+        parameter_descriptions={
+            "jobs": "List of job dictionaries to evaluate"
+        }
+    )
+
+    logger.info(f"Created Job Search Tools registry with {len(registry.tool_schemas)} tools")
+
+    return registry
