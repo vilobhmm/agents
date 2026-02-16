@@ -187,17 +187,8 @@ Your teammate will receive your message and can respond. Multiple teammates can 
         """Build system prompt from agent directory files"""
         parts = []
 
-        # Add identity
-        identity_file = agent_dir / "IDENTITY.md"
-        if identity_file.exists():
-            parts.append(identity_file.read_text())
-
-        # Add teammates info
-        teammates_file = agent_dir / "TEAMMATES.md"
-        if teammates_file.exists():
-            parts.append(teammates_file.read_text())
-
-        # Add tool usage instructions if tools are available
+        # 🚨 CRITICAL: Add tool guidance FIRST before identity/personality
+        # This ensures Claude sees the mandatory tool-use rules before any role-play examples
         if tool_registry and tool_registry.tool_schemas:
             tool_guidance = """
 ## ⚠️ CRITICAL: YOU MUST USE YOUR REAL TOOLS
@@ -231,6 +222,16 @@ You: "Here are your meetings: 9am Team Sync, 2pm Review..." ← NEVER DO THIS! Y
 **Remember:** You have REAL tools. Use them. Don't pretend. Call the tools first, then show the results.
 """
             parts.append(tool_guidance)
+
+        # NOW add identity/personality (after tool rules are established)
+        identity_file = agent_dir / "IDENTITY.md"
+        if identity_file.exists():
+            parts.append(identity_file.read_text())
+
+        # Add teammates info
+        teammates_file = agent_dir / "TEAMMATES.md"
+        if teammates_file.exists():
+            parts.append(teammates_file.read_text())
 
         return "\n\n".join(parts)
 
