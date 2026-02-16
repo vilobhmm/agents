@@ -276,6 +276,15 @@ Be concise and action-oriented. Execute first, explain second.
         # Get tools if available
         tools = tool_registry.get_tool_schemas() if tool_registry else None
 
+        # DEBUG: Log tool availability
+        if tool_registry:
+            logger.info(f"🔧 Tool registry available with {len(tools) if tools else 0} tools")
+            if tools:
+                tool_names = [t['name'] for t in tools]
+                logger.info(f"🔧 Available tools: {', '.join(tool_names[:5])}{'...' if len(tool_names) > 5 else ''}")
+        else:
+            logger.info("⚠️ No tool registry provided to agent")
+
         try:
             # First API call with retry logic
             api_params = {
@@ -287,6 +296,7 @@ Be concise and action-oriented. Execute first, explain second.
 
             if tools:
                 api_params["tools"] = tools
+                logger.info(f"✅ Sending {len(tools)} tools to Claude API")
 
             # Retry logic for connection errors
             max_retries = 3
@@ -325,6 +335,12 @@ Be concise and action-oriented. Execute first, explain second.
             # Handle tool use in a loop
             max_tool_iterations = 5
             iteration = 0
+
+            # DEBUG: Log response stop reason
+            logger.info(f"🤖 Claude response - stop_reason: {response.stop_reason}")
+            if hasattr(response, 'content'):
+                content_types = [block.type for block in response.content]
+                logger.info(f"🤖 Response content blocks: {content_types}")
 
             while response.stop_reason == "tool_use" and iteration < max_tool_iterations:
                 iteration += 1
