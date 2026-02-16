@@ -13,6 +13,7 @@ import json
 from pathlib import Path
 
 from agency.tools.job_scraper import JobScraper, search_jobs, get_company_jobs
+from agency.tools.universal_job_scraper import UniversalJobScraper, search_jobs_universal
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,88 @@ class JobSearchTools:
         self.preferences_file = self.storage_path / "preferences.json"
 
         logger.info("✅ Job Search Tools initialized with REAL scraping")
+
+    # ===== Universal Job Search (Fully Configurable) =====
+
+    async def universal_job_search(
+        self,
+        role: Optional[str] = None,
+        company: Optional[str] = None,
+        location: Optional[str] = None,
+        country: Optional[str] = None,
+        experience_level: Optional[str] = None,
+        skills: Optional[str] = None  # Can be comma-separated or single skill
+    ) -> List[Dict]:
+        """
+        Universal job search - FULLY CONFIGURABLE!
+
+        Search for ANY role, at ANY company, in ANY country, with ANY skills.
+
+        Args:
+            role: Job title (e.g., "Software Engineer", "Product Manager", "Research Scientist")
+            company: Company name (e.g., "Google", "TCS", "Wipro", "Anthropic")
+            location: City/region (e.g., "Bangalore", "San Francisco", "Remote")
+            country: Country (e.g., "India", "USA", "France", "UK")
+            experience_level: Experience (e.g., "2-3 years", "5+ years", "Entry level")
+            skills: Skills (e.g., "Java, Spring Boot" or "Python, Machine Learning, PyTorch")
+
+        Returns:
+            List of job search links across multiple job boards (LinkedIn, Indeed, Naukri, etc.)
+
+        Examples:
+            # Java Developer at TCS in India with 2-3 years experience
+            search(role="Java Developer", company="TCS", country="India",
+                   experience_level="2-3 years", skills="Java, Spring Boot")
+
+            # Product Manager at Google, remote
+            search(role="Product Manager", company="Google", location="Remote")
+
+            # Research Scientist with ML skills
+            search(role="Research Scientist", skills="Machine Learning, PyTorch, Python")
+
+            # Any Software Engineer role in France
+            search(role="Software Engineer", country="France")
+
+            # Wipro jobs in India
+            search(company="Wipro", country="India")
+        """
+        logger.info(f"🌐 Starting universal job search...")
+        logger.info(f"   Parameters: role={role}, company={company}, location={location}, "
+                   f"country={country}, exp={experience_level}, skills={skills}")
+
+        try:
+            # Parse skills (handle comma-separated string)
+            skills_list = None
+            if skills:
+                if isinstance(skills, str):
+                    skills_list = [s.strip() for s in skills.split(',')]
+                else:
+                    skills_list = skills
+
+            # Use universal scraper
+            async with UniversalJobScraper() as scraper:
+                jobs = await scraper.universal_search(
+                    role=role,
+                    company=company,
+                    location=location,
+                    country=country,
+                    experience_level=experience_level,
+                    skills=skills_list
+                )
+
+            logger.info(f"✅ Universal search found {len(jobs)} job board links")
+
+            # Add tracking metadata
+            for job in jobs:
+                job["search_date"] = datetime.now().isoformat()
+                job["is_real_data"] = True
+                job["search_type"] = "universal"
+
+            return jobs
+
+        except Exception as e:
+            logger.error(f"❌ Error in universal job search: {e}")
+            return []
 
     # ===== Real Job Scraping Methods =====
 
