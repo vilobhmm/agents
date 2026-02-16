@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+"""
+Job Tracking Skill for Claude Code
+
+Track, manage, and view your job applications.
+
+Usage:
+  /job-track "Show my tracked jobs"
+  /job-track "Track the Google ML Engineer role"
+  /job-track "Update TCS Java Developer status to applied"
+  /job-track "Show jobs I've applied to"
+
+Calls the job_hunter agent for job tracking operations.
+"""
+
+import sys
+import subprocess
+
+
+def main():
+    """Run job tracking"""
+
+    # Get tracking query from arguments
+    if len(sys.argv) < 2:
+        # Default: show tracked jobs
+        query = "Show me all my tracked jobs and their current status"
+    else:
+        # Join all arguments as the query
+        query = " ".join(sys.argv[1:])
+
+    print(f"📊 Job Tracking: {query}\n")
+    print("=" * 70)
+
+    # Run the job_hunter agent
+    try:
+        result = subprocess.run(
+            [
+                "python", "-m", "agency", "debug", "test", "job_hunter",
+                "--message", query
+            ],
+            cwd="/home/user/agents",
+            capture_output=False,
+            text=True
+        )
+
+        return result.returncode
+
+    except Exception as e:
+        print(f"❌ Error running job tracking: {e}")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
