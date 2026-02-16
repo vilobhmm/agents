@@ -305,7 +305,57 @@ def create_job_search_tools_registry() -> ToolRegistry:
     registry = ToolRegistry()
     job_tools = JobSearchTools()
 
-    # Register job scraping tools
+    # ===== UNIVERSAL JOB SEARCH (Fully Configurable) =====
+    registry.register_tool(
+        job_tools.universal_job_search,
+        name="universal_job_search",
+        description="""
+        🌐 UNIVERSAL JOB SEARCH - Search for ANY job, at ANY company, in ANY country!
+
+        This is your PRIMARY job search tool. Use this for ALL job searches unless specifically asked for AI companies only.
+
+        Features:
+        - Search ANY role (Software Engineer, Product Manager, Data Scientist, etc.)
+        - Search ANY company (TCS, Wipro, Infosys, Google, Microsoft, startups, etc.)
+        - Search ANY country (India, USA, France, UK, etc.)
+        - Search ANY location (Bangalore, Mumbai, San Francisco, Remote, etc.)
+        - Filter by experience level (0-1 years, 2-3 years, 5+ years, etc.)
+        - Filter by skills (Java, Python, Machine Learning, PyTorch, React, etc.)
+
+        Returns:
+        - LinkedIn Jobs search links (pre-filtered)
+        - Indeed search links (global + country-specific)
+        - Naukri.com links (for India)
+        - Glassdoor links (with company ratings)
+
+        ALL with one-click apply access!
+
+        Examples:
+        - Find Java Developer at TCS in India with 2-3 years:
+          universal_job_search(role="Java Developer", company="TCS", country="India", experience_level="2-3 years")
+
+        - Find Software Engineer at Wipro:
+          universal_job_search(role="Software Engineer", company="Wipro")
+
+        - Find ML Engineer with Python skills:
+          universal_job_search(role="ML Engineer", skills="Python, Machine Learning, PyTorch")
+
+        - Find remote Product Manager:
+          universal_job_search(role="Product Manager", location="Remote")
+
+        USE THIS TOOL FOR ALL JOB SEARCHES!
+        """,
+        parameter_descriptions={
+            "role": "Job title/role (e.g., 'Software Engineer', 'Product Manager', 'Data Scientist')",
+            "company": "Company name (e.g., 'Google', 'TCS', 'Wipro', 'Microsoft') - ANY company!",
+            "location": "City/region (e.g., 'Bangalore', 'San Francisco', 'Remote')",
+            "country": "Country (e.g., 'India', 'USA', 'France', 'UK')",
+            "experience_level": "Experience level (e.g., '2-3 years', '5+ years', 'Entry level')",
+            "skills": "Skills comma-separated (e.g., 'Java, Spring Boot' or 'Python, Machine Learning')"
+        }
+    )
+
+    # ===== LEGACY AI COMPANY SCRAPERS (For AI companies only) =====
     registry.register_tool(
         job_tools.scrape_anthropic_jobs,
         name="scrape_anthropic_jobs",
