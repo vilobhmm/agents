@@ -15,6 +15,10 @@ from agency.core.queue import FileQueue
 from agency.core.agent import AgentInvoker
 from agency.core.conversation import ConversationManager
 from agency.core import router
+from agency.core.tools import (
+    create_google_tools_registry,
+    create_job_search_tools_registry
+)
 
 
 logger = logging.getLogger(__name__)
@@ -50,6 +54,25 @@ class AgencyProcessor:
 
         # Per-agent promise chains (for sequential processing per agent)
         self.agent_chains: Dict[str, asyncio.Task] = {}
+
+        # Initialize tool registries for agents that need them
+        logger.info("Initializing agent tools...")
+        self.tool_registries = {}
+
+        try:
+            # CC agent gets Google tools (Gmail, Calendar, Drive)
+            self.tool_registries['cc'] = create_google_tools_registry()
+            logger.info("✅ CC agent: Google tools loaded (Gmail, Calendar, Drive)")
+        except Exception as e:
+            logger.warning(f"⚠️ CC agent: Google tools not available - {e}")
+            logger.warning("   CC will work without real data access until credentials are configured")
+
+        try:
+            # job_hunter agent gets job search tools
+            self.tool_registries['job_hunter'] = create_job_search_tools_registry()
+            logger.info("✅ job_hunter agent: Job search tools loaded")
+        except Exception as e:
+            logger.warning(f"⚠️ job_hunter agent: Job search tools failed - {e}")
 
         logger.info("Agency processor initialized")
 
@@ -189,14 +212,18 @@ class AgencyProcessor:
             else:
                 agent_message = message.message
 
-            # Invoke agent
+            # Get tool registry for this agent (if available)
+            tool_registry = self.tool_registries.get(agent_id)
+
+            # Invoke agent with tools
             start_time = time.time()
             response = await self.invoker.invoke_agent(
                 agent_config=agent_config,
                 message=agent_message,
                 workspace_path=self.config.workspace_path,
                 team_context=conversation.team_context,
-                reset=False
+                reset=False,
+                tool_registry=tool_registry
             )
             elapsed = time.time() - start_time
 
