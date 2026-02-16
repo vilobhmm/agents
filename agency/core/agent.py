@@ -310,6 +310,15 @@ You: "Here are your meetings: 9am Team Sync, 2pm Review..." ← NEVER DO THIS! Y
             if tools:
                 api_params["tools"] = tools
                 logger.info(f"✅ Sending {len(tools)} tools to Claude API")
+                # DEBUG: Log system prompt excerpt to verify tool guidance is included
+                if system_prompt:
+                    first_200_chars = system_prompt[:200].replace('\n', ' ')
+                    logger.info(f"🔍 System prompt starts with: {first_200_chars}...")
+                # DEBUG: Log last user message
+                if history and len(history) > 0:
+                    last_msg = history[-1]
+                    if isinstance(last_msg, dict) and 'content' in last_msg:
+                        logger.info(f"🔍 User message: {last_msg['content'][:100]}")
 
             # Retry logic for connection errors
             max_retries = 3
@@ -354,6 +363,12 @@ You: "Here are your meetings: 9am Team Sync, 2pm Review..." ← NEVER DO THIS! Y
             if hasattr(response, 'content'):
                 content_types = [block.type for block in response.content]
                 logger.info(f"🤖 Response content blocks: {content_types}")
+                # DEBUG: If end_turn with text, log what Claude said
+                if response.stop_reason == "end_turn":
+                    for block in response.content:
+                        if block.type == "text":
+                            logger.info(f"🤖 Claude's text response: {block.text[:200]}...")
+                            break
 
             while response.stop_reason == "tool_use" and iteration < max_tool_iterations:
                 iteration += 1
