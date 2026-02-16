@@ -1,6 +1,7 @@
 """Unified Google Services - One-stop access to Gmail, Calendar, and Drive"""
 
 import logging
+import os
 from typing import Dict, List, Optional
 from datetime import datetime, timedelta
 
@@ -33,15 +34,23 @@ class GoogleServices:
         Initialize all Google services.
 
         Args:
-            credentials_path: Path to OAuth credentials
-            token_path: Path to token file
+            credentials_path: Path to OAuth credentials (defaults to google_oauth_credentials.json)
+            token_path: Path to token file (defaults to google_token.pickle)
         """
         logger.info("Initializing Google Services...")
 
-        # Initialize all services
-        self.gmail = EmailIntegration(credentials_path, token_path)
-        self.calendar = CalendarIntegration(credentials_path, token_path)
-        self.drive = DriveIntegration(credentials_path, token_path)
+        # Use unified credentials for all Google services
+        creds = credentials_path or os.getenv(
+            "GOOGLE_OAUTH_CREDENTIALS", "google_oauth_credentials.json"
+        )
+        token = token_path or os.getenv(
+            "GOOGLE_TOKEN_PATH", "google_token.pickle"
+        )
+
+        # Initialize all services with the same credentials
+        self.gmail = EmailIntegration(creds, token)
+        self.calendar = CalendarIntegration(creds, token)
+        self.drive = DriveIntegration(creds, token)
 
         logger.info("✅ Google Services ready (Gmail, Calendar, Drive)")
 
