@@ -136,12 +136,16 @@ def is_teammate(agent_id: str, team_config) -> bool:
 
     Args:
         agent_id: Agent ID to check
-        team_config: Team configuration
+        team_config: Team configuration (can be dict or object)
 
     Returns:
         True if agent is in team
     """
-    return agent_id in team_config.agents
+    # Handle both dict and object formats
+    if isinstance(team_config, dict):
+        return agent_id in team_config.get('agents', [])
+    else:
+        return agent_id in team_config.agents
 
 
 def validate_mentions(
