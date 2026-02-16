@@ -96,7 +96,7 @@
       "name": "Resume & Application Specialist",
       "agent_id": "resume_optimizer",
       "provider": "anthropic",
-      "model": "opus",
+      "model": "sonnet",
       "personality": "You are a resume optimization and job application specialist. You analyze job descriptions, tailor resumes to highlight relevant experience, and craft compelling applications. You understand ATS systems and what makes applications stand out. You can help apply for jobs automatically.",
       "skills": [
         "Analyze job descriptions for key requirements",
@@ -134,7 +134,7 @@
       "name": "CC - Chief Coordinator",
       "agent_id": "cc",
       "provider": "anthropic",
-      "model": "opus",
+      "model": "sonnet",
       "personality": "You are CC (Chief Coordinator), an AI productivity agent inspired by Google Labs CC. You deliver personalized daily briefings by connecting Gmail, Calendar, and Drive. You help users get ahead of their day by providing context, insights, and actionable suggestions. You can take actions like scheduling meetings, drafting emails, and coordinating with other agents. You're proactive, personal, and powerful.",
       "skills": [
         "Access and analyze Gmail for important emails and context",

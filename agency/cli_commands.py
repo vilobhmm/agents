@@ -949,35 +949,47 @@ class MessagingCommands(BaseCommands):
 
     def send(self, args):
         """Send message to an agent"""
-        from agency.core.queue_manager import QueueManager
-        from agency.core.message import Message
+        from agency.core.queue import FileQueue
+        from agency.core.types import MessageData
+        from agency.config import load_config
+        from pathlib import Path
+        import time
 
-        # Validate agent exists
-        data = self.load_agents()
-        agents = data.get("agents", {})
-
-        if args.agent_id not in agents:
-            logger.error(f"Agent '{args.agent_id}' not found")
-            logger.info(f"Available agents: {', '.join(agents.keys())}")
+        # Load config to validate agent exists
+        try:
+            config = load_config()
+        except Exception as e:
+            logger.error(f"Failed to load config: {e}")
             return 1
 
-        # Create message
-        msg = Message(
-            user_id=args.user,
-            text=args.message,
-            agent_id=args.agent_id,
-            channel="cli"
+        if args.agent_id not in config.agents:
+            logger.error(f"Agent '{args.agent_id}' not found")
+            logger.info(f"Available agents: {', '.join(config.agents.keys())}")
+            return 1
+
+        # Create message data with @agent_id prefix
+        message_text = f"@{args.agent_id} {args.message}"
+
+        message_data = MessageData(
+            channel="cli",
+            sender=args.user,
+            sender_id=args.user,
+            message=message_text,
+            timestamp=time.time(),
+            message_id=f"cli_{int(time.time()*1000)}",
+            metadata={}
         )
 
         # Queue message
-        queue = QueueManager(self.base_dir / "queue")
-        queue.enqueue(msg)
+        queue_path = config.queue_path
+        queue = FileQueue(queue_path)
+        queue.enqueue(message_data, "incoming")
 
         logger.info(f"✅ Message sent to @{args.agent_id}")
-        logger.info(f"Message ID: {msg.id}")
+        logger.info(f"Message: {args.message}")
         logger.info("")
-        logger.info("Response will be processed by the message processor.")
-        logger.info("Start it with: agency start --processor-only")
+        logger.info("Response will be processed by the agency processor.")
+        logger.info("Make sure the agency is running: agency start")
 
         return 0
 
