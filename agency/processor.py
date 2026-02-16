@@ -330,3 +330,48 @@ class AgencyProcessor:
                 if aid in self.config.agents
             ]
         }
+
+
+async def main():
+    """Run the agency processor"""
+    import sys
+    from dotenv import load_dotenv
+    from agency.config import load_config
+
+    # Load environment
+    load_dotenv()
+
+    # Setup logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+
+    logger.info("🔄 Starting Agency Message Processor...")
+
+    # Load config
+    try:
+        config = load_config()
+        logger.info(f"Loaded config: {len(config.agents)} agents, {len(config.teams)} teams")
+    except Exception as e:
+        logger.error(f"Failed to load config: {e}")
+        sys.exit(1)
+
+    # Create and run processor
+    processor = AgencyProcessor(config)
+
+    logger.info("✅ Processor ready - listening for messages...")
+    logger.info(f"   Queue path: {config.queue_path}")
+    logger.info("")
+
+    try:
+        await processor.run()
+    except KeyboardInterrupt:
+        logger.info("Shutting down processor...")
+    except Exception as e:
+        logger.error(f"Processor error: {e}", exc_info=True)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
