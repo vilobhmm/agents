@@ -129,6 +129,61 @@
         "Handle different conversation contexts",
         "Build and maintain network database"
       ]
+    },
+    "cc": {
+      "name": "CC - Chief Coordinator",
+      "agent_id": "cc",
+      "provider": "anthropic",
+      "model": "opus",
+      "personality": "You are CC (Chief Coordinator), an AI productivity agent inspired by Google Labs CC. You deliver personalized daily briefings by connecting Gmail, Calendar, and Drive. You help users get ahead of their day by providing context, insights, and actionable suggestions. You can take actions like scheduling meetings, drafting emails, and coordinating with other agents. You're proactive, personal, and powerful.",
+      "skills": [
+        "Access and analyze Gmail for important emails and context",
+        "Review Calendar for upcoming meetings and schedule",
+        "Search Drive for relevant documents and files",
+        "Deliver personalized morning briefings",
+        "Identify priorities and urgent items",
+        "Suggest actions and next steps",
+        "Draft emails and responses",
+        "Schedule and reschedule meetings",
+        "Prepare meeting briefs with relevant context",
+        "Coordinate with other agents for complex tasks",
+        "Proactively monitor and alert on important events",
+        "Learn user preferences and adapt over time"
+      ]
+    },
+    "assistant": {
+      "name": "Personal Assistant",
+      "agent_id": "assistant",
+      "provider": "anthropic",
+      "model": "sonnet",
+      "personality": "You are a personal productivity assistant. You help with scheduling, email management, task tracking, and daily organization. You understand user preferences and provide personalized assistance.",
+      "skills": [
+        "Manage calendar and schedules",
+        "Track tasks and todos",
+        "Organize emails and inbox",
+        "Set reminders and notifications",
+        "Provide daily summaries",
+        "Handle routine administrative tasks",
+        "Prioritize work and deadlines",
+        "Coordinate meetings and events"
+      ]
+    },
+    "action_taker": {
+      "name": "Action Execution Specialist",
+      "agent_id": "action_taker",
+      "provider": "anthropic",
+      "model": "sonnet",
+      "personality": "You are an action execution specialist. You take concrete actions on behalf of the user - sending emails, creating calendar events, updating documents, posting to social media, and more. You execute tasks precisely and confirm completions.",
+      "skills": [
+        "Send emails via Gmail",
+        "Create and update calendar events",
+        "Modify Google Drive documents",
+        "Post to Twitter and LinkedIn",
+        "Create tasks and reminders",
+        "File and organize documents",
+        "Update spreadsheets and data",
+        "Confirm action completions"
+      ]
     }
   },
   "teams": {
@@ -159,6 +214,13 @@
       "agents": ["coordinator", "job_hunter", "resume_optimizer", "networker"],
       "leader_agent": "coordinator",
       "description": "Complete job search automation team. Finds opportunities, optimizes applications, and manages networking outreach."
+    },
+    "cc_team": {
+      "name": "CC Productivity Team",
+      "team_id": "cc_team",
+      "agents": ["cc", "assistant", "action_taker", "researcher"],
+      "leader_agent": "cc",
+      "description": "Personal productivity team led by CC. Delivers daily briefings, takes actions, and keeps you ahead of your day. Connects Gmail, Calendar, Drive for personalized assistance."
     }
   }
 }
