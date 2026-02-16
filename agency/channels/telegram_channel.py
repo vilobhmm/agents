@@ -55,9 +55,17 @@ class TelegramChannel:
         # Create Telegram application
         self.app = Application.builder().token(bot_token).build()
 
-        # Add handlers
+        # Add command handlers
         self.app.add_handler(CommandHandler("start", self._handle_start))
         self.app.add_handler(CommandHandler("help", self._handle_help))
+        self.app.add_handler(CommandHandler("status", self._handle_status))
+        self.app.add_handler(CommandHandler("agents", self._handle_agents))
+        self.app.add_handler(CommandHandler("teams", self._handle_teams))
+        self.app.add_handler(CommandHandler("briefing", self._handle_briefing))
+        self.app.add_handler(CommandHandler("jobs", self._handle_jobs))
+        self.app.add_handler(CommandHandler("research", self._handle_research))
+
+        # Add message handler (non-commands)
         self.app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self._handle_message))
 
         logger.info("Telegram channel initialized")
@@ -91,12 +99,15 @@ class TelegramChannel:
         await update.message.reply_text(
             f"👋 Hi {user.first_name}!\n\n"
             "I'm your Agency assistant. I coordinate a team of AI agents to help you.\n\n"
-            "**How to use:**\n"
-            "Send messages in this format:\n"
-            "`@agent_id your message here`\n\n"
-            "**Example:**\n"
-            "`@researcher What's new in AI today?`\n\n"
-            "Type /help to see available agents and teams."
+            "**Quick Commands:**\n"
+            "• `/briefing` - Daily briefing\n"
+            "• `/jobs` - Job opportunities\n"
+            "• `/research` - AI research\n"
+            "• `/help` - Full command list\n\n"
+            "**Talk to agents:**\n"
+            "`@cc Good morning briefing`\n"
+            "`@researcher What's new in AI?`\n\n"
+            "Type /help to see all agents and teams."
         )
 
     async def _handle_help(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -123,8 +134,17 @@ class TelegramChannel:
                     help_text += f"• `@{team_id}` - {desc}\n"
                 help_text += "\n"
 
+            # Commands
+            help_text += "**Quick Commands:**\n"
+            help_text += "• `/briefing` - Daily briefing from CC\n"
+            help_text += "• `/jobs` - Find job opportunities\n"
+            help_text += "• `/research` - Latest AI research\n"
+            help_text += "• `/agents` - List all agents\n"
+            help_text += "• `/teams` - List all teams\n"
+            help_text += "• `/status` - System status\n\n"
+
             # Usage examples
-            help_text += "**Try:**\n"
+            help_text += "**Or talk directly:**\n"
             help_text += "`@cc Good morning briefing`\n"
             help_text += "`@job_hunter Find ML Engineer roles`\n"
             help_text += "`@researcher What's new in AI?`\n\n"
@@ -150,6 +170,159 @@ Just message me naturally with an @mention!
 """
 
         await update.message.reply_text(help_text)
+
+    async def _handle_status(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /status command - show system status"""
+        status_text = "📊 **Agency Status**\n\n"
+
+        if self.config:
+            status_text += f"✅ **Running**\n\n"
+            status_text += f"**Agents:** {len(self.config.agents)}\n"
+            status_text += f"**Teams:** {len(self.config.teams)}\n"
+            status_text += f"**Queue:** {self.queue.queue_path}\n\n"
+            status_text += "Use /agents or /teams to see details."
+        else:
+            status_text += "⚠️ Configuration not loaded\n"
+            status_text += "Agency may be running with limited functionality."
+
+        await update.message.reply_text(status_text)
+
+    async def _handle_agents(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /agents command - list all agents with details"""
+        if not self.config or not self.config.agents:
+            await update.message.reply_text("⚠️ No agents configured")
+            return
+
+        agents_text = "👥 **Available Agents**\n\n"
+
+        for agent_id, agent in self.config.agents.items():
+            agents_text += f"**@{agent_id}** - {agent.name}\n"
+            agents_text += f"_{agent.provider} / {agent.model}_\n"
+
+            # Add first sentence of personality as description
+            if agent.personality:
+                desc = agent.personality.split('.')[0] + '.'
+                agents_text += f"{desc}\n"
+
+            agents_text += "\n"
+
+        agents_text += "💡 **Usage:** `@agent_id your message`"
+
+        await update.message.reply_text(agents_text)
+
+    async def _handle_teams(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /teams command - list all teams with details"""
+        if not self.config or not self.config.teams:
+            await update.message.reply_text("⚠️ No teams configured")
+            return
+
+        teams_text = "👨‍👩‍👧‍👦 **Available Teams**\n\n"
+
+        for team_id, team in self.config.teams.items():
+            teams_text += f"**@{team_id}** - {team.name}\n"
+            teams_text += f"_Leader: {team.leader_agent}_\n"
+
+            if team.description:
+                teams_text += f"{team.description}\n"
+
+            teams_text += f"**Members:** {', '.join(team.agents)}\n\n"
+
+        teams_text += "💡 **Usage:** `@team_id your message`"
+
+        await update.message.reply_text(teams_text)
+
+    async def _handle_briefing(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /briefing command - shortcut for @cc daily briefing"""
+        user = update.effective_user
+
+        # Check if cc agent exists
+        if self.config and "cc" not in self.config.agents:
+            await update.message.reply_text(
+                "⚠️ CC agent not configured. Use /agents to see available agents."
+            )
+            return
+
+        # Create message data for @cc briefing
+        message_data = MessageData(
+            channel="telegram",
+            sender=user.username or user.first_name,
+            sender_id=str(user.id),
+            message="@cc Good morning! Please give me a daily briefing with my calendar, emails, and priorities.",
+            timestamp=time.time(),
+            message_id=str(update.message.message_id),
+            metadata={
+                "chat_id": update.effective_chat.id,
+                "user_id": user.id,
+            }
+        )
+
+        # Enqueue message
+        self.queue.enqueue(message_data, "incoming")
+
+        logger.info(f"Briefing requested by {user.username}")
+        await update.message.reply_text("📋 Preparing your daily briefing...")
+
+    async def _handle_jobs(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /jobs command - shortcut for @job_hunter job search"""
+        user = update.effective_user
+
+        # Check if job_hunter agent exists
+        if self.config and "job_hunter" not in self.config.agents:
+            await update.message.reply_text(
+                "⚠️ Job Hunter agent not configured. Use /agents to see available agents."
+            )
+            return
+
+        # Create message data for @job_hunter
+        message_data = MessageData(
+            channel="telegram",
+            sender=user.username or user.first_name,
+            sender_id=str(user.id),
+            message="@job_hunter Find new ML Engineer and AI Research job opportunities at top companies like Anthropic, OpenAI, Google DeepMind, and Meta.",
+            timestamp=time.time(),
+            message_id=str(update.message.message_id),
+            metadata={
+                "chat_id": update.effective_chat.id,
+                "user_id": user.id,
+            }
+        )
+
+        # Enqueue message
+        self.queue.enqueue(message_data, "incoming")
+
+        logger.info(f"Job search requested by {user.username}")
+        await update.message.reply_text("💼 Searching for job opportunities...")
+
+    async def _handle_research(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /research command - shortcut for @researcher daily research"""
+        user = update.effective_user
+
+        # Check if researcher agent exists
+        if self.config and "researcher" not in self.config.agents:
+            await update.message.reply_text(
+                "⚠️ Researcher agent not configured. Use /agents to see available agents."
+            )
+            return
+
+        # Create message data for @researcher
+        message_data = MessageData(
+            channel="telegram",
+            sender=user.username or user.first_name,
+            sender_id=str(user.id),
+            message="@researcher What's new and interesting in AI today? Check ArXiv, Twitter, Hacker News, and major AI labs.",
+            timestamp=time.time(),
+            message_id=str(update.message.message_id),
+            metadata={
+                "chat_id": update.effective_chat.id,
+                "user_id": user.id,
+            }
+        )
+
+        # Enqueue message
+        self.queue.enqueue(message_data, "incoming")
+
+        logger.info(f"Research requested by {user.username}")
+        await update.message.reply_text("🔬 Researching latest AI developments...")
 
     async def _handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle incoming messages"""
