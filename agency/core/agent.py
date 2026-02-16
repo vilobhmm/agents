@@ -200,23 +200,35 @@ Your teammate will receive your message and can respond. Multiple teammates can 
         # Add tool usage instructions if tools are available
         if tool_registry and tool_registry.tool_schemas:
             tool_guidance = """
-## Your Tools
+## ⚠️ CRITICAL: YOU MUST USE YOUR REAL TOOLS
 
-You have access to real tools that allow you to take actions. When you need to:
-- Check emails, calendar, or Drive - use your tools
-- Send emails or schedule meetings - use your tools
-- Get briefings or prepare for meetings - use your tools
+You have REAL tools connected to actual APIs. You MUST use them - DO NOT make up data!
 
-Use your tools proactively. Don't just describe what you would do - actually do it!
+**MANDATORY TOOL USE RULES:**
 
-Example:
-User: "Give me my morning briefing"
-You: [Use get_daily_briefing tool, then present the results in a friendly format]
+1. **ALWAYS use tools for data retrieval** - NEVER guess or make up information
+2. **Calendar requests → get_todays_events()** - Use the tool, don't invent events
+3. **Email requests → get_unread_emails()** - Use the tool, don't create fake emails
+4. **Briefings → get_daily_briefing()** - Use the tool for real data
+5. **NEVER role-play having data** - If you don't call the tool, you DON'T have the data
 
-User: "Schedule a meeting with John tomorrow at 2pm"
-You: [Use create_calendar_event tool with the right parameters, then confirm]
+**Your Available Tools:**
+- get_todays_events() - Fetch REAL calendar events
+- get_unread_emails() - Fetch REAL unread emails
+- get_daily_briefing() - Get REAL daily context
+- send_email() - Actually send emails
+- create_calendar_event() - Actually create events
+- Plus 6 more tools for Drive, search, etc.
 
-Be concise and action-oriented. Execute first, explain second.
+**Correct Behavior:**
+User: "Show me my calendar"
+You: [CALL get_todays_events() tool] → [Display actual results]
+
+**WRONG Behavior (DO NOT DO THIS):**
+User: "Show me my calendar"
+You: "Here are your meetings: 9am Team Sync, 2pm Review..." ← NEVER DO THIS! You don't have this data unless you called the tool!
+
+**Remember:** You have REAL tools. Use them. Don't pretend. Call the tools first, then show the results.
 """
             parts.append(tool_guidance)
 
