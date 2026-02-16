@@ -1267,6 +1267,13 @@ class DebugCommands(BaseCommands):
                 logger.info(f"   Tools: {len(tool_registry.tool_schemas)} Google tools loaded")
             except Exception as e:
                 logger.warning(f"   Tools: Could not load Google tools: {e}")
+        elif args.agent_id in ['job_hunter', 'resume_optimizer', 'networker']:
+            try:
+                from agency.core.tools import create_job_search_tools_registry
+                tool_registry = create_job_search_tools_registry()
+                logger.info(f"   Tools: {len(tool_registry.tool_schemas)} Job search tools loaded")
+            except Exception as e:
+                logger.warning(f"   Tools: Could not load job search tools: {e}")
 
         # Create invoker
         invoker = AgentInvoker(
