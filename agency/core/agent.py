@@ -314,11 +314,13 @@ You: "Here are your meetings: 9am Team Sync, 2pm Review..." ← NEVER DO THIS! Y
                 if system_prompt:
                     first_200_chars = system_prompt[:200].replace('\n', ' ')
                     logger.info(f"🔍 System prompt starts with: {first_200_chars}...")
-                # DEBUG: Log last user message
-                if history and len(history) > 0:
-                    last_msg = history[-1]
-                    if isinstance(last_msg, dict) and 'content' in last_msg:
-                        logger.info(f"🔍 User message: {last_msg['content'][:100]}")
+                # DEBUG: Log conversation history length and contents
+                logger.info(f"🔍 Conversation history length: {len(history)} messages")
+                if history:
+                    for idx, msg in enumerate(history[-3:]):  # Last 3 messages
+                        role = msg.get('role', 'unknown')
+                        content = str(msg.get('content', ''))[:100]
+                        logger.info(f"🔍 History[{len(history)-3+idx}]: {role} - {content}...")
 
             # Retry logic for connection errors
             max_retries = 3
