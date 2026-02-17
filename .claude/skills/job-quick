@@ -1,0 +1,72 @@
+#!/usr/bin/env python3
+"""
+Quick Job Search Skill
+
+Super fast job search for common queries.
+
+Usage:
+  /job-quick google ml
+  /job-quick anthropic engineer
+  /job-quick tcs java india
+  /job-quick microsoft product remote
+
+This skill provides instant job links for common searches.
+"""
+
+import sys
+import urllib.parse
+
+
+def main():
+    """Run quick job search"""
+
+    # Get search terms from arguments
+    if len(sys.argv) < 2:
+        print("❌ Please provide search terms!")
+        print("\nUsage:")
+        print('  /job-quick google ml')
+        print('  /job-quick anthropic engineer')
+        print('  /job-quick tcs java india')
+        print('  /job-quick microsoft product remote')
+        return 1
+
+    # Join all arguments as search terms
+    search_terms = " ".join(sys.argv[1:])
+    encoded_query = urllib.parse.quote(search_terms)
+
+    print(f"⚡ Quick Job Search: {search_terms}\n")
+    print("=" * 70)
+    print()
+
+    # Generate instant job board links
+    print("🔗 INSTANT JOB LINKS:")
+    print()
+
+    # LinkedIn
+    linkedin_url = f"https://www.linkedin.com/jobs/search/?keywords={encoded_query}"
+    print(f"  LinkedIn:  {linkedin_url}")
+
+    # Indeed
+    indeed_url = f"https://www.indeed.com/jobs?q={encoded_query}"
+    print(f"  Indeed:    {indeed_url}")
+
+    # Glassdoor
+    glassdoor_url = f"https://www.glassdoor.com/Job/jobs.htm?sc.keyword={encoded_query}"
+    print(f"  Glassdoor: {glassdoor_url}")
+
+    # If "india" in search, add Naukri
+    if "india" in search_terms.lower():
+        naukri_url = f"https://www.naukri.com/{encoded_query.replace(' ', '-')}-jobs"
+        print(f"  Naukri:    {naukri_url}")
+
+    print()
+    print("=" * 70)
+    print("✨ Click any link to start searching!")
+    print()
+    print("💡 For advanced search with filters, use: /job-search \"your detailed query\"")
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
