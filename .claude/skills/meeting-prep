@@ -1,0 +1,105 @@
+#!/usr/bin/env python3
+"""
+Meeting Prep Skill
+
+Automatically prepare for your next meeting with context, attendees,
+related emails, docs, and suggested talking points.
+
+Usage:
+  /meeting-prep                    # Prep for next meeting
+  /meeting-prep --auto             # Auto-run 15 min before meetings
+  /meeting-prep "Project Review"   # Prep for specific meeting
+
+Provides:
+- Meeting details (time, location, attendees)
+- Recent emails from/to attendees (last 3 days)
+- Related documents from Drive
+- Meeting notes if available
+- Suggested talking points
+- Action items from previous meetings
+"""
+
+import sys
+import subprocess
+from pathlib import Path
+
+AGENTS_DIR = Path(__file__).resolve().parent.parent.parent
+
+
+def main():
+    """Prepare for upcoming meeting"""
+
+    print("🔜 Meeting Preparation")
+    print("=" * 70)
+
+    # Get meeting name if specified
+    meeting_query = ""
+    if len(sys.argv) > 1 and not sys.argv[1].startswith("--"):
+        meeting_query = " ".join(sys.argv[1:])
+
+    # Build comprehensive prep message
+    if meeting_query:
+        message = f"""
+Prepare me for the meeting: "{meeting_query}"
+
+Include:
+1. 📅 Meeting Details: Date, time, duration, location/link, attendees
+2. 📧 Recent Context: Emails from/to attendees in last 3 days
+3. 📁 Related Docs: Any files in Drive mentioned or shared by attendees
+4. 📝 Previous Notes: Any notes from previous meetings with same attendees
+5. 💡 Talking Points: Key topics I should be ready to discuss
+6. ✅ Action Items: Any pending tasks from previous meetings
+7. ⚠️ Heads Up: Anything urgent or important to know
+
+Format as a concise meeting prep brief.
+"""
+    else:
+        message = """
+Prepare me for my next meeting (within next 60 minutes).
+
+Include:
+1. 📅 Meeting Details: What, when, where, who
+2. 📧 Recent Context: Relevant emails from attendees (last 3 days)
+3. 📁 Related Docs: Files in Drive related to this meeting
+4. 📝 Previous Notes: Notes from past meetings with these people
+5. 💡 Talking Points: What I should be ready to discuss
+6. ✅ Action Items: Pending tasks from previous interactions
+7. ⚠️ Heads Up: Important info or changes
+
+If no meeting in next hour, show meetings for rest of today.
+"""
+
+    # Run the CC agent
+    try:
+        result = subprocess.run(
+            [
+                "python", "-m", "agency", "debug", "test", "cc",
+                "--message", message
+            ],
+            cwd=str(AGENTS_DIR),
+            capture_output=False,
+            text=True,
+            timeout=120
+        )
+
+        # If --auto mode, send to Telegram too
+        if "--auto" in sys.argv:
+            print("\n📱 Sending to Telegram...")
+            subprocess.run(
+                [str(Path(__file__).parent / "telegram-send"),
+                 "🔜 MEETING PREP\n\nYour next meeting is coming up!"],
+                capture_output=True
+            )
+
+        return result.returncode
+
+    except subprocess.TimeoutExpired:
+        print("❌ Timeout preparing meeting (took >2 minutes)")
+        return 1
+    except Exception as e:
+        print(f"❌ Error preparing meeting: {e}")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

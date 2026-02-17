@@ -1,0 +1,204 @@
+#!/usr/bin/env python3
+"""
+Daily Digest Skill
+
+Comprehensive daily briefing with intelligent prioritization,
+action items, and proactive suggestions.
+
+Usage:
+  /daily-digest              # Full daily digest
+  /daily-digest --morning    # Morning briefing (8 AM)
+  /daily-digest --eod        # End of day summary (6 PM)
+  /daily-digest --midday     # Midday check-in (12 PM)
+
+Includes:
+- Priority emails and urgent items
+- Today's schedule with meeting prep
+- Approaching deadlines (next 7 days)
+- Pending action items
+- Recent files and documents
+- Smart suggestions and recommendations
+- Tomorrow's preview (for EOD)
+"""
+
+import sys
+import subprocess
+from pathlib import Path
+from datetime import datetime
+
+AGENTS_DIR = Path(__file__).resolve().parent.parent.parent
+
+
+def get_morning_digest():
+    """Generate morning digest"""
+    return """
+☀️ GOOD MORNING! Here's your daily briefing:
+
+1. 📧 PRIORITY INBOX (analyze my unread emails):
+   - Flag urgent/important emails (from boss, clients, VIPs)
+   - Identify emails needing action today
+   - Note any deadlines or time-sensitive requests
+   - Summary: X unread, Y urgent, Z need response
+
+2. 📅 TODAY'S SCHEDULE:
+   - List all events for today with times
+   - Highlight back-to-back meetings (suggest breaks)
+   - Note any conflicts or missing locations/links
+   - Calculate total meeting time vs focus time
+
+3. 🔜 NEXT MEETING PREP:
+   - Details of first meeting
+   - Key attendees and context
+   - Related emails from participants
+   - Talking points
+
+4. ⏰ DEADLINES & DUE DATES (next 7 days):
+   - List upcoming deadlines from calendar
+   - Note any approaching fast
+   - Days remaining for each
+
+5. ✅ ACTION ITEMS (from recent emails):
+   - Pending tasks from last 2 days
+   - Who requested what
+   - Priority order
+
+6. 📁 RECENT ACTIVITY:
+   - Files modified yesterday
+   - Shared documents
+   - Collaborations
+
+7. 💡 SMART SUGGESTIONS:
+   - Block focus time if needed
+   - Prep time before big meetings
+   - Follow-up reminders
+   - Schedule recommendations
+
+Format concisely with emojis. Focus on actionable insights.
+"""
+
+
+def get_midday_digest():
+    """Generate midday check-in"""
+    return """
+🌞 MIDDAY CHECK-IN:
+
+1. ⏰ TIME CHECK:
+   - Meetings so far today
+   - Remaining meetings
+   - Available focus time this afternoon
+
+2. 📧 NEW URGENT ITEMS:
+   - Emails arrived since morning
+   - Anything requiring immediate attention
+
+3. 🔜 AFTERNOON PREP:
+   - Next meeting in detail
+   - What to prioritize this afternoon
+
+4. ✅ QUICK WINS:
+   - Quick action items that can be done now
+   - Emails to respond to (5 min or less)
+
+Keep it brief - just highlights and urgent items.
+"""
+
+
+def get_eod_digest():
+    """Generate end of day summary"""
+    return """
+🌙 END OF DAY SUMMARY:
+
+1. ✅ TODAY'S ACCOMPLISHMENTS:
+   - Meetings attended
+   - Emails handled
+   - Tasks completed (infer from emails sent, calendar)
+
+2. 📧 INBOX STATUS:
+   - Unread count
+   - Urgent items still pending
+   - Tomorrow's must-dos
+
+3. 📅 TOMORROW'S PREVIEW:
+   - All meetings tomorrow
+   - Time for deep work
+   - Deadlines or important events
+
+4. ⚠️ HEADS UP:
+   - Action items that didn't get done today
+   - Deadlines approaching this week
+   - Prep needed for tomorrow
+
+5. 💡 EVENING SUGGESTIONS:
+   - Block time tomorrow if needed
+   - Prep for early meetings
+   - Follow-ups to send tonight
+
+6. 🎯 TOP PRIORITY TOMORROW:
+   - Single most important thing to tackle
+
+Format as a encouraging wrap-up with clear tomorrow plan.
+"""
+
+
+def main():
+    """Generate daily digest"""
+
+    # Determine mode
+    mode = "full"
+    if "--morning" in sys.argv:
+        mode = "morning"
+        title = "☀️ MORNING BRIEFING"
+        message_template = get_morning_digest()
+    elif "--midday" in sys.argv:
+        mode = "midday"
+        title = "🌞 MIDDAY CHECK-IN"
+        message_template = get_midday_digest()
+    elif "--eod" in sys.argv:
+        mode = "eod"
+        title = "🌙 END OF DAY SUMMARY"
+        message_template = get_eod_digest()
+    else:
+        title = "📊 DAILY DIGEST"
+        message_template = get_morning_digest()
+
+    print(title)
+    print("=" * 70)
+    print(f"Generated: {datetime.now().strftime('%I:%M %p')}\n")
+
+    # Run the CC agent
+    try:
+        result = subprocess.run(
+            [
+                "python", "-m", "agency", "debug", "test", "cc",
+                "--message", message_template
+            ],
+            cwd=str(AGENTS_DIR),
+            capture_output=False,
+            text=True,
+            timeout=180
+        )
+
+        # Send to Telegram if available
+        try:
+            print("\n📱 Sending to Telegram...")
+            subprocess.run(
+                [str(Path(__file__).parent / "telegram-send"),
+                 f"{title}\n\nYour digest is ready! Check terminal for details."],
+                capture_output=True,
+                timeout=10
+            )
+        except:
+            pass  # Telegram send is optional
+
+        return result.returncode
+
+    except subprocess.TimeoutExpired:
+        print("❌ Timeout generating digest (took >3 minutes)")
+        return 1
+    except Exception as e:
+        print(f"❌ Error generating digest: {e}")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

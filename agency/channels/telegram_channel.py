@@ -75,6 +75,13 @@ class TelegramChannel:
         self.app.add_handler(CommandHandler("trackjobs", self._handle_track_jobs))
         self.app.add_handler(CommandHandler("applications", self._handle_applications))
 
+        # Proactive Commands
+        self.app.add_handler(CommandHandler("proactive", self._handle_proactive))
+        self.app.add_handler(CommandHandler("meetingprep", self._handle_meeting_prep))
+        self.app.add_handler(CommandHandler("digest", self._handle_digest))
+        self.app.add_handler(CommandHandler("midday", self._handle_midday))
+        self.app.add_handler(CommandHandler("eod", self._handle_eod))
+
         # Other Commands
         self.app.add_handler(CommandHandler("research", self._handle_research))
 
@@ -94,6 +101,13 @@ class TelegramChannel:
             BotCommand("emails", "📧 Check inbox"),
             BotCommand("calendar", "📅 Today's schedule"),
             BotCommand("meeting", "🔜 Next meeting prep"),
+
+            # Proactive Commands
+            BotCommand("proactive", "🤖 Run proactive check"),
+            BotCommand("meetingprep", "🔜 Auto meeting prep"),
+            BotCommand("digest", "📊 Full daily digest"),
+            BotCommand("midday", "🌞 Midday check-in"),
+            BotCommand("eod", "🌙 End of day summary"),
 
             # Job Hunter Commands
             BotCommand("jobs", "💼 Quick job search"),
@@ -148,6 +162,12 @@ class TelegramChannel:
             "• `/emails` - Check inbox 📧\n"
             "• `/calendar` - Today's schedule 📅\n"
             "• `/meeting` - Next meeting prep 🔜\n\n"
+            "**🤖 Proactive Features:**\n"
+            "• `/proactive` - Smart check (urgent items, meetings, deadlines) 🔍\n"
+            "• `/meetingprep` - Auto prep for next meeting 🔜\n"
+            "• `/digest` - Full daily digest 📊\n"
+            "• `/midday` - Midday check-in 🌞\n"
+            "• `/eod` - End of day summary 🌙\n\n"
             "**💼 Job Hunter (Career):**\n"
             "• `/jobs` - Quick job search 🔍\n"
             "• `/jobsearch [query]` - Custom search 🎯\n"
@@ -568,6 +588,111 @@ Just message me naturally with an @mention!
 
         logger.info(f"Research requested by {user.username}")
         await update.message.reply_text("🔬 Researching latest AI developments...")
+
+    async def _handle_proactive(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /proactive command - run proactive check"""
+        user = update.effective_user
+
+        message_data = MessageData(
+            channel="telegram",
+            sender=user.username or user.first_name,
+            sender_id=str(user.id),
+            message="@cc Run a proactive check: 1) Check for meetings in next 30 minutes and prepare brief, 2) Check for urgent/important unread emails, 3) Check for approaching deadlines, 4) Check for calendar conflicts, 5) Identify pending action items from recent emails. Summarize only items that need attention.",
+            timestamp=time.time(),
+            message_id=str(update.message.message_id),
+            metadata={
+                "chat_id": update.effective_chat.id,
+                "user_id": user.id,
+            }
+        )
+
+        self.queue.enqueue(message_data, "incoming")
+        logger.info(f"Proactive check requested by {user.username}")
+        await update.message.reply_text("🤖 Running proactive check...")
+
+    async def _handle_meeting_prep(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /meetingprep command - prepare for next meeting"""
+        user = update.effective_user
+
+        message_data = MessageData(
+            channel="telegram",
+            sender=user.username or user.first_name,
+            sender_id=str(user.id),
+            message="@cc Prepare me for my next meeting (within next 60 minutes). Include: 1) Meeting details (what, when, where, who), 2) Recent emails from/to attendees (last 3 days), 3) Related files in Drive, 4) Previous meeting notes if available, 5) Suggested talking points, 6) Pending action items. Format as a concise meeting prep brief. If no meeting in next hour, show meetings for rest of today.",
+            timestamp=time.time(),
+            message_id=str(update.message.message_id),
+            metadata={
+                "chat_id": update.effective_chat.id,
+                "user_id": user.id,
+            }
+        )
+
+        self.queue.enqueue(message_data, "incoming")
+        logger.info(f"Meeting prep requested by {user.username}")
+        await update.message.reply_text("🔜 Preparing for your next meeting...")
+
+    async def _handle_digest(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /digest command - full daily digest"""
+        user = update.effective_user
+
+        message_data = MessageData(
+            channel="telegram",
+            sender=user.username or user.first_name,
+            sender_id=str(user.id),
+            message="@cc Give me a comprehensive daily digest: 1) Priority inbox (urgent/important emails), 2) Today's full schedule, 3) Next meeting prep, 4) Deadlines this week, 5) Pending action items, 6) Recent files, 7) Smart suggestions. Format with sections and emojis.",
+            timestamp=time.time(),
+            message_id=str(update.message.message_id),
+            metadata={
+                "chat_id": update.effective_chat.id,
+                "user_id": user.id,
+            }
+        )
+
+        self.queue.enqueue(message_data, "incoming")
+        logger.info(f"Daily digest requested by {user.username}")
+        await update.message.reply_text("📊 Generating your daily digest...")
+
+    async def _handle_midday(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /midday command - midday check-in"""
+        user = update.effective_user
+
+        message_data = MessageData(
+            channel="telegram",
+            sender=user.username or user.first_name,
+            sender_id=str(user.id),
+            message="@cc Give me a midday check-in: 1) Time status (meetings so far, remaining meetings, available focus time), 2) New urgent items since morning, 3) Afternoon prep (next meeting details), 4) Quick wins (action items that can be done now). Keep it brief.",
+            timestamp=time.time(),
+            message_id=str(update.message.message_id),
+            metadata={
+                "chat_id": update.effective_chat.id,
+                "user_id": user.id,
+            }
+        )
+
+        self.queue.enqueue(message_data, "incoming")
+        logger.info(f"Midday check requested by {user.username}")
+        await update.message.reply_text("🌞 Midday check-in coming up...")
+
+    async def _handle_eod(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /eod command - end of day summary"""
+        user = update.effective_user
+
+        message_data = MessageData(
+            channel="telegram",
+            sender=user.username or user.first_name,
+            sender_id=str(user.id),
+            message="@cc Give me an end of day summary: 1) Today's accomplishments (meetings, emails handled, tasks done), 2) Inbox status (unread count, urgent pending), 3) Tomorrow's preview (all meetings, time for work, important events), 4) Pending items that didn't get done, 5) Prep needed for tomorrow, 6) Top priority for tomorrow. Format as encouraging wrap-up.",
+            timestamp=time.time(),
+            message_id=str(update.message.message_id),
+            metadata={
+                "chat_id": update.effective_chat.id,
+                "user_id": user.id,
+            }
+        )
+
+        self.queue.enqueue(message_data, "incoming")
+        logger.info(f"EOD summary requested by {user.username}")
+        await update.message.reply_text("🌙 Wrapping up your day...")
 
     async def _handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle incoming messages"""

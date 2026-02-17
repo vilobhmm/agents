@@ -1,0 +1,283 @@
+#!/usr/bin/env python3
+"""
+Proactive Monitor Skill
+
+Monitors calendar, emails, and tasks to proactively send notifications
+about important items, upcoming meetings, deadlines, and action items.
+
+Usage:
+  /proactive-monitor              # Run once
+  /proactive-monitor --daemon     # Run continuously in background
+  /proactive-monitor --meeting-prep   # Only meeting prep
+  /proactive-monitor --urgent     # Only urgent items
+
+Sends notifications via Telegram when:
+- Meeting is 15 minutes away (with prep summary)
+- Urgent/important email arrives
+- Deadline approaching
+- Calendar conflict detected
+- Action item needs attention
+"""
+
+import sys
+import subprocess
+import time
+from pathlib import Path
+from datetime import datetime, timedelta
+import json
+
+AGENTS_DIR = Path(__file__).resolve().parent.parent.parent
+
+def send_telegram(message):
+    """Send message via Telegram"""
+    try:
+        subprocess.run(
+            [str(Path(__file__).parent / "telegram-send"), message],
+            check=True,
+            capture_output=True
+        )
+    except Exception as e:
+        print(f"⚠️  Could not send Telegram notification: {e}")
+
+
+def check_upcoming_meetings():
+    """Check for meetings in next 15-30 minutes and send prep"""
+    print("🔜 Checking for upcoming meetings...")
+
+    try:
+        result = subprocess.run(
+            [
+                "python", "-m", "agency", "debug", "test", "cc",
+                "--message", "Check if I have any meetings in the next 30 minutes. If yes, prepare a meeting brief with: 1) Meeting details, 2) Attendees, 3) Related emails from participants in the last 3 days, 4) Any attachments or docs mentioned, 5) Suggested talking points. Format as a concise prep guide."
+            ],
+            cwd=str(AGENTS_DIR),
+            capture_output=True,
+            text=True,
+            timeout=60
+        )
+
+        output = result.stdout
+
+        # If meeting found, send notification
+        if "meeting" in output.lower() and ("in " in output.lower() or "at " in output.lower()):
+            send_telegram(f"🔜 MEETING PREP\n\n{output}")
+            return True
+
+    except Exception as e:
+        print(f"❌ Error checking meetings: {e}")
+
+    return False
+
+
+def check_urgent_emails():
+    """Check for urgent/important unread emails"""
+    print("📧 Checking for urgent emails...")
+
+    try:
+        result = subprocess.run(
+            [
+                "python", "-m", "agency", "debug", "test", "cc",
+                "--message", "Check my unread emails. Flag any that are: 1) From my boss/manager, 2) Marked important/urgent, 3) Contain words like 'urgent', 'asap', 'deadline', 'action required', 4) From clients or VIPs. Summarize only the urgent ones."
+            ],
+            cwd=str(AGENTS_DIR),
+            capture_output=True,
+            text=True,
+            timeout=60
+        )
+
+        output = result.stdout
+
+        # If urgent emails found
+        if any(word in output.lower() for word in ["urgent", "important", "deadline", "asap"]):
+            send_telegram(f"🚨 URGENT EMAILS\n\n{output}")
+            return True
+
+    except Exception as e:
+        print(f"❌ Error checking emails: {e}")
+
+    return False
+
+
+def check_deadlines():
+    """Check for approaching deadlines in calendar"""
+    print("⏰ Checking for deadlines...")
+
+    try:
+        result = subprocess.run(
+            [
+                "python", "-m", "agency", "debug", "test", "cc",
+                "--message", "Check my calendar for any events with 'deadline', 'due', or 'submit' in the title in the next 7 days. List them with days remaining."
+            ],
+            cwd=str(AGENTS_DIR),
+            capture_output=True,
+            text=True,
+            timeout=60
+        )
+
+        output = result.stdout
+
+        # If deadlines found
+        if "deadline" in output.lower() or "due" in output.lower():
+            send_telegram(f"⏰ UPCOMING DEADLINES\n\n{output}")
+            return True
+
+    except Exception as e:
+        print(f"❌ Error checking deadlines: {e}")
+
+    return False
+
+
+def check_calendar_conflicts():
+    """Check for calendar conflicts or overlapping events"""
+    print("📅 Checking for calendar conflicts...")
+
+    try:
+        result = subprocess.run(
+            [
+                "python", "-m", "agency", "debug", "test", "cc",
+                "--message", "Check my calendar for today and tomorrow. Flag any: 1) Overlapping events, 2) Back-to-back meetings (no break), 3) Events without location/link, 4) Unusually long meetings (>2 hours). Summarize issues only if found."
+            ],
+            cwd=str(AGENTS_DIR),
+            capture_output=True,
+            text=True,
+            timeout=60
+        )
+
+        output = result.stdout
+
+        # If conflicts found
+        if any(word in output.lower() for word in ["overlap", "conflict", "back-to-back", "missing"]):
+            send_telegram(f"⚠️ CALENDAR ISSUES\n\n{output}")
+            return True
+
+    except Exception as e:
+        print(f"❌ Error checking conflicts: {e}")
+
+    return False
+
+
+def check_action_items():
+    """Check for pending action items from emails"""
+    print("✅ Checking for action items...")
+
+    try:
+        result = subprocess.run(
+            [
+                "python", "-m", "agency", "debug", "test", "cc",
+                "--message", "Review my emails from the last 2 days. Identify any action items or tasks I need to complete. Look for phrases like 'can you', 'please send', 'need by', 'follow up'. List only pending actions."
+            ],
+            cwd=str(AGENTS_DIR),
+            capture_output=True,
+            text=True,
+            timeout=60
+        )
+
+        output = result.stdout
+
+        # If action items found
+        if any(word in output.lower() for word in ["action", "task", "need to", "follow up"]):
+            send_telegram(f"✅ ACTION ITEMS\n\n{output}")
+            return True
+
+    except Exception as e:
+        print(f"❌ Error checking action items: {e}")
+
+    return False
+
+
+def run_proactive_check(mode="all"):
+    """Run proactive checks based on mode"""
+
+    print("🤖 Running Proactive Monitor")
+    print("=" * 70)
+    print(f"Mode: {mode}")
+    print(f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+
+    found_items = []
+
+    if mode in ["all", "meeting-prep"]:
+        if check_upcoming_meetings():
+            found_items.append("meetings")
+
+    if mode in ["all", "urgent"]:
+        if check_urgent_emails():
+            found_items.append("urgent emails")
+
+    if mode in ["all"]:
+        if check_deadlines():
+            found_items.append("deadlines")
+
+        if check_calendar_conflicts():
+            found_items.append("conflicts")
+
+        if check_action_items():
+            found_items.append("action items")
+
+    if found_items:
+        print(f"\n✅ Sent notifications about: {', '.join(found_items)}")
+    else:
+        print("\n✨ All clear! No urgent items to report.")
+
+    return len(found_items)
+
+
+def run_daemon():
+    """Run continuously as a background daemon"""
+    print("🤖 Starting Proactive Monitor Daemon")
+    print("=" * 70)
+    print("Running continuous monitoring...")
+    print("Press Ctrl+C to stop\n")
+
+    # Track last check times
+    last_meeting_check = datetime.now() - timedelta(minutes=10)
+    last_urgent_check = datetime.now() - timedelta(minutes=15)
+    last_full_check = datetime.now() - timedelta(hours=1)
+
+    try:
+        while True:
+            now = datetime.now()
+
+            # Check meetings every 10 minutes
+            if (now - last_meeting_check).seconds >= 600:  # 10 min
+                check_upcoming_meetings()
+                last_meeting_check = now
+
+            # Check urgent emails every 15 minutes
+            if (now - last_urgent_check).seconds >= 900:  # 15 min
+                check_urgent_emails()
+                last_urgent_check = now
+
+            # Full check every hour
+            if (now - last_full_check).seconds >= 3600:  # 1 hour
+                run_proactive_check("all")
+                last_full_check = now
+
+            # Sleep for 1 minute
+            time.sleep(60)
+
+    except KeyboardInterrupt:
+        print("\n\n✅ Proactive monitor stopped")
+
+
+def main():
+    """Main entry point"""
+
+    # Parse arguments
+    if "--daemon" in sys.argv:
+        run_daemon()
+    elif "--meeting-prep" in sys.argv:
+        run_proactive_check("meeting-prep")
+    elif "--urgent" in sys.argv:
+        run_proactive_check("urgent")
+    elif "--help" in sys.argv or "-h" in sys.argv:
+        print(__doc__)
+        return 0
+    else:
+        # Single run
+        run_proactive_check("all")
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
