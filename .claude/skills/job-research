@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+"""
+Job & Company Research Skill
+
+Research companies, roles, salaries, and interview processes.
+
+Usage:
+  /job-research "Tell me about Google's ML Engineer interview process"
+  /job-research "What's the salary range for Java Developer at TCS?"
+  /job-research "Research Anthropic's company culture and values"
+  /job-research "What skills do I need for Product Manager at Microsoft?"
+
+This skill invokes the job_hunter agent for comprehensive research.
+"""
+
+import sys
+import subprocess
+
+
+def main():
+    """Run job/company research"""
+
+    # Get research query from arguments
+    if len(sys.argv) < 2:
+        print("❌ Please provide a research query!")
+        print("\nUsage:")
+        print('  /job-research "Google ML Engineer interview process"')
+        print('  /job-research "TCS Java Developer salary in India"')
+        print('  /job-research "Anthropic company culture"')
+        print('  /job-research "Product Manager skills needed"')
+        return 1
+
+    # Join all arguments as the query
+    query = " ".join(sys.argv[1:])
+
+    print(f"🔬 Researching: {query}\n")
+    print("=" * 70)
+
+    # Run the job_hunter agent with research context
+    research_query = f"Research and provide detailed information about: {query}"
+
+    try:
+        result = subprocess.run(
+            [
+                "python", "-m", "agency", "debug", "test", "job_hunter",
+                "--message", research_query
+            ],
+            cwd="/home/user/agents",
+            capture_output=False,
+            text=True
+        )
+
+        return result.returncode
+
+    except Exception as e:
+        print(f"❌ Error running research: {e}")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

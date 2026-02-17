@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+"""
+Job Matching Skill
+
+Find jobs that match your skills, preferences, and experience.
+
+Usage:
+  /job-match
+  /job-match "Show jobs matching my profile"
+  /job-match "Find remote jobs for my skills"
+  /job-match "Update my preferences: location India, experience 2-3 years"
+
+This skill invokes the job_hunter agent with preference matching.
+"""
+
+import sys
+import subprocess
+
+
+def main():
+    """Run job matching"""
+
+    # Get matching query from arguments
+    if len(sys.argv) < 2:
+        # Default: show matched jobs based on saved preferences
+        query = "Show me jobs that match my saved preferences and skills"
+    else:
+        # Join all arguments as the query
+        query = " ".join(sys.argv[1:])
+
+    print(f"🎯 Job Matching: {query}\n")
+    print("=" * 70)
+
+    # Run the job_hunter agent
+    try:
+        result = subprocess.run(
+            [
+                "python", "-m", "agency", "debug", "test", "job_hunter",
+                "--message", query
+            ],
+            cwd="/home/user/agents",
+            capture_output=False,
+            text=True
+        )
+
+        return result.returncode
+
+    except Exception as e:
+        print(f"❌ Error running job matching: {e}")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

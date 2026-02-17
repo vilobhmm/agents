@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+"""
+Job Application Helper Skill
+
+Helps with job applications: resume tailoring, cover letters, and tracking.
+
+Usage:
+  /job-apply "Help me apply to Google ML Engineer role"
+  /job-apply "Generate cover letter for TCS Java Developer"
+  /job-apply "Tailor my resume for Product Manager at Microsoft"
+  /job-apply "What's the status of my Anthropic application?"
+
+This skill invokes the job_hunter agent for application assistance.
+"""
+
+import sys
+import subprocess
+
+
+def main():
+    """Run job application helper"""
+
+    # Get application query from arguments
+    if len(sys.argv) < 2:
+        print("❌ Please provide an application request!")
+        print("\nUsage:")
+        print('  /job-apply "Help me apply to Google ML Engineer"')
+        print('  /job-apply "Generate cover letter for TCS"')
+        print('  /job-apply "Tailor resume for Product Manager at Microsoft"')
+        print('  /job-apply "Show my application status"')
+        return 1
+
+    # Join all arguments as the query
+    query = " ".join(sys.argv[1:])
+
+    print(f"📝 Application Helper: {query}\n")
+    print("=" * 70)
+
+    # Run the job_hunter agent
+    try:
+        result = subprocess.run(
+            [
+                "python", "-m", "agency", "debug", "test", "job_hunter",
+                "--message", query
+            ],
+            cwd="/home/user/agents",
+            capture_output=False,
+            text=True
+        )
+
+        return result.returncode
+
+    except Exception as e:
+        print(f"❌ Error running application helper: {e}")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

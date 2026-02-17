@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+"""
+Interview Preparation Skill
+
+Prepare for interviews: practice questions, company research, tips.
+
+Usage:
+  /interview-prep "Google ML Engineer technical interview"
+  /interview-prep "Behavioral questions for Product Manager"
+  /interview-prep "System design questions for Senior Engineer"
+  /interview-prep "Java coding questions for TCS interview"
+
+This skill invokes the job_hunter agent for interview prep.
+"""
+
+import sys
+import subprocess
+
+
+def main():
+    """Run interview preparation"""
+
+    # Get prep query from arguments
+    if len(sys.argv) < 2:
+        print("❌ Please provide interview details!")
+        print("\nUsage:")
+        print('  /interview-prep "Google ML Engineer technical"')
+        print('  /interview-prep "Behavioral for Product Manager"')
+        print('  /interview-prep "System design for Senior Engineer"')
+        print('  /interview-prep "Java coding for TCS"')
+        return 1
+
+    # Join all arguments as the query
+    query = " ".join(sys.argv[1:])
+
+    print(f"🎯 Interview Prep: {query}\n")
+    print("=" * 70)
+
+    # Run the job_hunter agent with interview prep context
+    prep_query = f"Help me prepare for this interview: {query}. Provide practice questions, tips, and what to expect."
+
+    try:
+        result = subprocess.run(
+            [
+                "python", "-m", "agency", "debug", "test", "job_hunter",
+                "--message", prep_query
+            ],
+            cwd="/home/user/agents",
+            capture_output=False,
+            text=True
+        )
+
+        return result.returncode
+
+    except Exception as e:
+        print(f"❌ Error running interview prep: {e}")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
