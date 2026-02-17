@@ -14,21 +14,32 @@ source agents-venv/bin/activate
 
 # Create queue directory if it doesn't exist
 echo "📁 Creating queue directory..."
-mkdir -p ~/.agency/queue/chats/cc_team
+mkdir -p ~/.agency/queue/incoming
 
 echo "🔍 Clearing queue..."
-rm -f ~/.agency/queue/chats/cc_team/*.md
+rm -f ~/.agency/queue/incoming/*.json
 
-echo "📝 Creating test message..."
-cat > ~/.agency/queue/chats/cc_team/test_$(date +%Y-%m-%dT%H:%M:%S).md << 'EOF'
-# Team Conversation: CC Productivity Team
-**Date:** 2026-02-17T10:00:00
-**Channel:** telegram | **Sender:** vm_test
-**Messages:** 1
+echo "📝 Creating test message in JSON format..."
+TIMESTAMP=$(date +%s)000
+MESSAGE_ID="test_${TIMESTAMP}"
 
-## User Message
-@cc What's on my calendar today?
+cat > ~/.agency/queue/incoming/${TIMESTAMP}_test.json << EOF
+{
+  "channel": "telegram",
+  "sender": "Test User",
+  "sender_id": "vm_test",
+  "message": "@cc What's on my calendar today?",
+  "timestamp": $(date +%s).0,
+  "message_id": "${MESSAGE_ID}",
+  "agent": null,
+  "team": null,
+  "conversation_id": null,
+  "files": [],
+  "metadata": {}
+}
 EOF
+
+echo "✅ Created JSON message: ~/.agency/queue/incoming/${TIMESTAMP}_test.json"
 
 # Clear old processor log
 rm -f logs/processor.log
