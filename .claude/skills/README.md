@@ -7,14 +7,108 @@
 ```bash
 # Morning routine
 /morning-brief
+/email-check
+/cal-today
 
 # Job hunting
 /job-search "Find Java Developer at TCS in India with 2-3 years"
 /job-dashboard
 
+# Productivity
+/email-check
+/cal-today
+/next-meeting
+/productivity
+
 # Quick search
 /job-quick google ml engineer
 ```
+
+---
+
+## 📧 Productivity Skills (NEW!)
+
+### Email Management
+
+#### `/email-check` - Check Inbox 📧
+```bash
+/email-check
+/email-check --count 10
+/email-check --detailed
+```
+
+#### `/email-send` - Send Email ✉️
+```bash
+/email-send "john@example.com" "Subject" "Message"
+/email-send "Draft email to boss about project update"
+```
+
+#### `/email-search` - Search Emails 🔍
+```bash
+/email-search "from:john@example.com"
+/email-search "project deadline"
+/email-search "subject:meeting after:2026-02-01"
+```
+
+### Calendar Management
+
+#### `/cal-today` - Today's Calendar 📅
+```bash
+/cal-today
+/cal-today --detailed
+```
+
+#### `/cal-week` - Week's Calendar 📆
+```bash
+/cal-week
+/cal-week --next-week
+/cal-week --detailed
+```
+
+#### `/next-meeting` - Next Meeting 🔜
+```bash
+/next-meeting
+/next-meeting --prep
+```
+
+#### `/cal-create` - Create Event ➕
+```bash
+/cal-create "Team meeting tomorrow at 2pm for 1 hour"
+/cal-create "Lunch with John on Friday at noon"
+```
+
+### Drive Management
+
+#### `/drive-search` - Search Drive 🔍
+```bash
+/drive-search "project proposal"
+/drive-search "type:pdf budget"
+```
+
+#### `/drive-recent` - Recent Files 📁
+```bash
+/drive-recent
+/drive-recent --count 20
+/drive-recent --today
+```
+
+### Dashboard
+
+#### `/productivity` - Productivity Dashboard 📊
+```bash
+/productivity
+/productivity --detailed
+```
+
+### Telegram Integration
+
+#### `/telegram-send` - Send to Telegram 📱
+```bash
+/telegram-send "Build completed successfully!"
+/telegram-send "Meeting in 10 minutes"
+```
+
+**See [PRODUCTIVITY_SKILLS_GUIDE.md](../PRODUCTIVITY_SKILLS_GUIDE.md) for complete documentation!**
 
 ---
 

@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+"""
+Email Search Skill
+
+Search your emails by keyword, sender, or date.
+
+Usage:
+  /email-search "from:john@example.com"
+  /email-search "project deadline"
+  /email-search "subject:meeting after:2026-02-01"
+
+Calls the CC agent to search Gmail.
+"""
+
+import sys
+import subprocess
+
+
+def main():
+    """Search emails"""
+
+    # Get search query from arguments
+    if len(sys.argv) < 2:
+        print("❌ Please provide a search query!")
+        print("\nUsage:")
+        print('  /email-search "from:john@example.com"')
+        print('  /email-search "project deadline"')
+        print('  /email-search "subject:meeting after:2026-02-01"')
+        return 1
+
+    # Join all arguments as the query
+    query = " ".join(sys.argv[1:])
+
+    print(f"🔍 Searching emails: {query}\n")
+    print("=" * 70)
+
+    # Run the CC agent
+    message = f"Search my emails for: {query}"
+
+    try:
+        result = subprocess.run(
+            [
+                "python", "-m", "agency", "debug", "test", "cc",
+                "--message", message
+            ],
+            cwd="/home/user/agents",
+            capture_output=False,
+            text=True
+        )
+
+        return result.returncode
+
+    except Exception as e:
+        print(f"❌ Error searching emails: {e}")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

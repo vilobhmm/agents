@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+"""
+Email Send Skill
+
+Send an email via Gmail.
+
+Usage:
+  /email-send "to@example.com" "Subject" "Message body"
+  /email-send --to john@example.com --subject "Meeting" --body "Let's meet tomorrow"
+
+Calls the CC agent to send email via Gmail API.
+"""
+
+import sys
+import subprocess
+
+
+def main():
+    """Send email"""
+
+    # Get email details from arguments
+    if len(sys.argv) < 2:
+        print("❌ Please provide email details!")
+        print("\nUsage:")
+        print('  /email-send "to@example.com" "Subject" "Message"')
+        print('  /email-send "Draft email to john@example.com about project deadline"')
+        return 1
+
+    # Join all arguments as the query
+    query = " ".join(sys.argv[1:])
+
+    print(f"📧 Sending email: {query}\n")
+    print("=" * 70)
+
+    # Run the CC agent
+    message = f"Send an email: {query}"
+
+    try:
+        result = subprocess.run(
+            [
+                "python", "-m", "agency", "debug", "test", "cc",
+                "--message", message
+            ],
+            cwd="/home/user/agents",
+            capture_output=False,
+            text=True
+        )
+
+        return result.returncode
+
+    except Exception as e:
+        print(f"❌ Error sending email: {e}")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

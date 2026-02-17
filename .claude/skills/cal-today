@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+"""
+Calendar Today Skill
+
+Show today's calendar events.
+
+Usage:
+  /cal-today
+  /cal-today --detailed
+
+Calls the CC agent to get today's calendar from Google Calendar.
+"""
+
+import sys
+import subprocess
+
+
+def main():
+    """Show today's calendar"""
+
+    print("📅 Today's Calendar\n")
+    print("=" * 70)
+
+    # Default message
+    if "--detailed" in sys.argv:
+        message = "Show me today's calendar with full details for each event including location, attendees, and description"
+    else:
+        message = "Show me today's calendar events"
+
+    # Run the CC agent
+    try:
+        result = subprocess.run(
+            [
+                "python", "-m", "agency", "debug", "test", "cc",
+                "--message", message
+            ],
+            cwd="/home/user/agents",
+            capture_output=False,
+            text=True
+        )
+
+        return result.returncode
+
+    except Exception as e:
+        print(f"❌ Error getting calendar: {e}")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

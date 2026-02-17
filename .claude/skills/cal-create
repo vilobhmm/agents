@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+"""
+Calendar Create Skill
+
+Create a new calendar event.
+
+Usage:
+  /cal-create "Team meeting tomorrow at 2pm for 1 hour"
+  /cal-create "Lunch with John on Friday at noon"
+  /cal-create "Project deadline on Feb 28"
+
+Calls the CC agent to create event in Google Calendar.
+"""
+
+import sys
+import subprocess
+
+
+def main():
+    """Create calendar event"""
+
+    # Get event details from arguments
+    if len(sys.argv) < 2:
+        print("❌ Please provide event details!")
+        print("\nUsage:")
+        print('  /cal-create "Team meeting tomorrow at 2pm for 1 hour"')
+        print('  /cal-create "Lunch with John on Friday at noon"')
+        print('  /cal-create "Project deadline on Feb 28"')
+        return 1
+
+    # Join all arguments as the query
+    query = " ".join(sys.argv[1:])
+
+    print(f"📅 Creating calendar event: {query}\n")
+    print("=" * 70)
+
+    # Run the CC agent
+    message = f"Create a calendar event: {query}"
+
+    try:
+        result = subprocess.run(
+            [
+                "python", "-m", "agency", "debug", "test", "cc",
+                "--message", message
+            ],
+            cwd="/home/user/agents",
+            capture_output=False,
+            text=True
+        )
+
+        return result.returncode
+
+    except Exception as e:
+        print(f"❌ Error creating event: {e}")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

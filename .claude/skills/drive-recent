@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+"""
+Drive Recent Skill
+
+Show recently modified files in Google Drive.
+
+Usage:
+  /drive-recent
+  /drive-recent --count 20
+  /drive-recent --today
+
+Calls the CC agent to get recent files from Google Drive.
+"""
+
+import sys
+import subprocess
+
+
+def main():
+    """Show recent Drive files"""
+
+    print("📁 Recent Google Drive Files\n")
+    print("=" * 70)
+
+    # Build message based on flags
+    if "--today" in sys.argv:
+        message = "Show me files modified today in Google Drive"
+    elif "--count" in sys.argv:
+        try:
+            idx = sys.argv.index("--count")
+            count = sys.argv[idx + 1]
+            message = f"Show me the {count} most recently modified files in Google Drive"
+        except (IndexError, ValueError):
+            message = "Show me recently modified files in Google Drive"
+    else:
+        message = "Show me recently modified files in Google Drive"
+
+    # Run the CC agent
+    try:
+        result = subprocess.run(
+            [
+                "python", "-m", "agency", "debug", "test", "cc",
+                "--message", message
+            ],
+            cwd="/home/user/agents",
+            capture_output=False,
+            text=True
+        )
+
+        return result.returncode
+
+    except Exception as e:
+        print(f"❌ Error getting recent files: {e}")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

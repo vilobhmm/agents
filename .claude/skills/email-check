@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+"""
+Email Check Skill
+
+Check your inbox for unread emails.
+
+Usage:
+  /email-check
+  /email-check --count 10
+  /email-check --detailed
+
+Calls the CC agent via Telegram for email management.
+"""
+
+import sys
+import subprocess
+
+
+def main():
+    """Check inbox"""
+
+    print("📧 Checking your inbox...\n")
+    print("=" * 70)
+
+    # Build message based on flags
+    if "--detailed" in sys.argv:
+        message = "Show me all unread emails with full details and content summaries"
+    elif "--count" in sys.argv:
+        try:
+            idx = sys.argv.index("--count")
+            count = sys.argv[idx + 1]
+            message = f"Show me my latest {count} unread emails"
+        except (IndexError, ValueError):
+            message = "Check my unread emails"
+    else:
+        message = "Check my unread emails and summarize them"
+
+    # Run the CC agent
+    try:
+        result = subprocess.run(
+            [
+                "python", "-m", "agency", "debug", "test", "cc",
+                "--message", message
+            ],
+            cwd="/home/user/agents",
+            capture_output=False,
+            text=True
+        )
+
+        return result.returncode
+
+    except Exception as e:
+        print(f"❌ Error checking emails: {e}")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
