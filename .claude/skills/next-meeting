@@ -13,7 +13,10 @@ Calls the CC agent to get next meeting from Google Calendar.
 
 import sys
 import subprocess
+from pathlib import Path
 
+
+AGENTS_DIR = Path(__file__).resolve().parent.parent.parent
 
 def main():
     """Show next meeting"""
@@ -34,7 +37,7 @@ def main():
                 "python", "-m", "agency", "debug", "test", "cc",
                 "--message", message
             ],
-            cwd="/home/user/agents",
+            cwd=str(AGENTS_DIR),
             capture_output=False,
             text=True
         )

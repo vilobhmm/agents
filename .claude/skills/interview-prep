@@ -15,7 +15,10 @@ This skill invokes the job_hunter agent for interview prep.
 
 import sys
 import subprocess
+from pathlib import Path
 
+
+AGENTS_DIR = Path(__file__).resolve().parent.parent.parent
 
 def main():
     """Run interview preparation"""
@@ -45,7 +48,7 @@ def main():
                 "python", "-m", "agency", "debug", "test", "job_hunter",
                 "--message", prep_query
             ],
-            cwd="/home/user/agents",
+            cwd=str(AGENTS_DIR),
             capture_output=False,
             text=True
         )

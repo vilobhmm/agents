@@ -20,7 +20,10 @@ This skill invokes the job_hunter agent for a comprehensive dashboard.
 
 import sys
 import subprocess
+from pathlib import Path
 
+
+AGENTS_DIR = Path(__file__).resolve().parent.parent.parent
 
 def main():
     """Run job dashboard"""
@@ -49,7 +52,7 @@ def main():
                 "python", "-m", "agency", "debug", "test", "job_hunter",
                 "--message", message
             ],
-            cwd="/home/user/agents",
+            cwd=str(AGENTS_DIR),
             capture_output=False,
             text=True
         )
