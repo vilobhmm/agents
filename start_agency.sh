@@ -1,50 +1,32 @@
 #!/bin/bash
-# Quick start script for Agency system
+# Start complete Agency system (Processor + Telegram Bot)
 
-set -e
+# Activate virtual environment  
+source agents-venv/bin/activate
 
-echo "🚀 Starting Agency System"
-echo "========================="
+# Set environment
+export $(cat .env | xargs)
+
+echo "🚀 Starting Agency System..."
 echo ""
 
-# Check if .env exists
-if [ ! -f .env ]; then
-    echo "❌ .env file not found!"
-    echo "Please create .env with required variables:"
-    echo ""
-    echo "ANTHROPIC_API_KEY=your_key_here"
-    echo "TELEGRAM_BOT_TOKEN=your_token_here"
-    echo "TELEGRAM_ALLOWED_USERS=your_user_id_here"
-    echo ""
-    exit 1
-fi
+# Start processor in background
+echo "1️⃣ Starting message processor..."
+nohup python -m agency.processor > logs/processor.log 2>&1 &
+PROCESSOR_PID=$!
+echo "   ✅ Processor started (PID: $PROCESSOR_PID)"
 
-# Check if ANTHROPIC_API_KEY is set
-source .env
-if [ -z "$ANTHROPIC_API_KEY" ]; then
-    echo "❌ ANTHROPIC_API_KEY not set in .env"
-    exit 1
-fi
+# Wait a moment
+sleep 2
 
-if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
-    echo "⚠️  TELEGRAM_BOT_TOKEN not set - Telegram bot will not work"
-fi
-
-echo "✅ Environment variables loaded"
+# Start telegram bot in foreground
+echo ""
+echo "2️⃣ Starting Telegram bot..."
+echo "   Bot will poll for messages and send responses"
+echo "   Press Ctrl+C to stop"
 echo ""
 
-# Stop any running instances
-echo "Stopping any existing agency processes..."
-python -m agency stop 2>/dev/null || true
-echo ""
+# Trap Ctrl+C to also kill processor
+trap "echo ''; echo 'Stopping...'; kill $PROCESSOR_PID 2>/dev/null; exit" INT TERM
 
-# Start the agency
-echo "Starting agency (processor + Telegram)..."
-echo ""
-echo "Press Ctrl+C to stop"
-echo ""
-
-python -m agency start
-
-echo ""
-echo "👋 Agency stopped"
+python -m agency.channels.telegram_channel
