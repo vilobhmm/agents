@@ -14,7 +14,10 @@ Calls the CC agent to search Gmail.
 
 import sys
 import subprocess
+from pathlib import Path
 
+
+AGENTS_DIR = Path(__file__).resolve().parent.parent.parent
 
 def main():
     """Search emails"""
@@ -43,7 +46,7 @@ def main():
                 "python", "-m", "agency", "debug", "test", "cc",
                 "--message", message
             ],
-            cwd="/home/user/agents",
+            cwd=str(AGENTS_DIR),
             capture_output=False,
             text=True
         )

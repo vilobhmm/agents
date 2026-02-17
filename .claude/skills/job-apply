@@ -15,7 +15,10 @@ This skill invokes the job_hunter agent for application assistance.
 
 import sys
 import subprocess
+from pathlib import Path
 
+
+AGENTS_DIR = Path(__file__).resolve().parent.parent.parent
 
 def main():
     """Run job application helper"""
@@ -43,7 +46,7 @@ def main():
                 "python", "-m", "agency", "debug", "test", "job_hunter",
                 "--message", query
             ],
-            cwd="/home/user/agents",
+            cwd=str(AGENTS_DIR),
             capture_output=False,
             text=True
         )

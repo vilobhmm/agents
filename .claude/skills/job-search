@@ -16,7 +16,10 @@ This skill directly invokes the job_hunter agent with universal search.
 import sys
 import os
 import subprocess
+from pathlib import Path
 
+
+AGENTS_DIR = Path(__file__).resolve().parent.parent.parent
 
 def main():
     """Run job search skill"""

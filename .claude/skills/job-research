@@ -15,7 +15,10 @@ This skill invokes the job_hunter agent for comprehensive research.
 
 import sys
 import subprocess
+from pathlib import Path
 
+
+AGENTS_DIR = Path(__file__).resolve().parent.parent.parent
 
 def main():
     """Run job/company research"""
@@ -45,7 +48,7 @@ def main():
                 "python", "-m", "agency", "debug", "test", "job_hunter",
                 "--message", research_query
             ],
-            cwd="/home/user/agents",
+            cwd=str(AGENTS_DIR),
             capture_output=False,
             text=True
         )

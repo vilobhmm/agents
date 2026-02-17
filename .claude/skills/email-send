@@ -13,7 +13,10 @@ Calls the CC agent to send email via Gmail API.
 
 import sys
 import subprocess
+from pathlib import Path
 
+
+AGENTS_DIR = Path(__file__).resolve().parent.parent.parent
 
 def main():
     """Send email"""
@@ -41,7 +44,7 @@ def main():
                 "python", "-m", "agency", "debug", "test", "cc",
                 "--message", message
             ],
-            cwd="/home/user/agents",
+            cwd=str(AGENTS_DIR),
             capture_output=False,
             text=True
         )
