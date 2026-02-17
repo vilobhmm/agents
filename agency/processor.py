@@ -228,6 +228,7 @@ class AgencyProcessor:
             elapsed = time.time() - start_time
 
             logger.info(f"Agent {agent_id} responded in {elapsed:.2f}s")
+            logger.info(f"🔍 DEBUG: Response length={len(response)}, content={repr(response[:200])}")
 
             # Extract teammate mentions from response
             mentions = router.extract_teammate_mentions(response)
