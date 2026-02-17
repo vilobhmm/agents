@@ -471,16 +471,45 @@ You: "Here are your meetings: 9am Team Sync, 2pm Review..." ← NEVER DO THIS! Y
         import json
         try:
             with open(history_file, 'r') as f:
-                return json.load(f)
+                history = json.load(f)
+                # Prune history to prevent token overflow
+                return self._prune_history(history)
         except Exception as e:
             logger.warning(f"Could not load history: {e}")
             return []
+
+    def _prune_history(self, history: list, max_messages: int = 10) -> list:
+        """
+        Prune conversation history to prevent token overflow.
+
+        Keeps only the most recent messages to stay within token limits.
+        With tool use, each iteration can add 3-4 messages, so this prevents
+        the history from growing to 200k+ tokens.
+
+        Args:
+            history: Full conversation history
+            max_messages: Maximum number of message pairs to keep
+
+        Returns:
+            Pruned history
+        """
+        if len(history) <= max_messages * 2:
+            return history
+
+        # Keep only the most recent messages
+        # Always keep pairs (user/assistant) to maintain conversation structure
+        pruned = history[-(max_messages * 2):]
+
+        logger.info(f"Pruned conversation history from {len(history)} to {len(pruned)} messages")
+        return pruned
 
     def _save_history(self, history_file: Path, history: list):
         """Save conversation history to file"""
         import json
         try:
+            # Prune before saving to keep file size manageable
+            pruned_history = self._prune_history(history, max_messages=10)
             with open(history_file, 'w') as f:
-                json.dump(history, f, indent=2)
+                json.dump(pruned_history, f, indent=2)
         except Exception as e:
             logger.error(f"Could not save history: {e}")
