@@ -628,12 +628,41 @@ Just message me naturally with an @mention!
                         message_text = queued_message.data.message
                         logger.info(f"📤 Sending response to chat {chat_id}: {repr(message_text[:100])}")
 
-                        await self.app.bot.send_message(
-                            chat_id=chat_id,
-                            text=message_text
-                        )
+                        # Telegram has a 4096 character limit - split if needed
+                        MAX_LENGTH = 4000  # Leave some margin
+                        if len(message_text) <= MAX_LENGTH:
+                            # Send as single message
+                            await self.app.bot.send_message(
+                                chat_id=chat_id,
+                                text=message_text
+                            )
+                            logger.info(f"✅ Sent response to chat {chat_id} ({len(message_text)} chars)")
+                        else:
+                            # Split into chunks
+                            chunks = []
+                            current_chunk = ""
 
-                        logger.info(f"✅ Sent response to chat {chat_id} ({len(message_text)} chars)")
+                            for line in message_text.split('\n'):
+                                if len(current_chunk) + len(line) + 1 <= MAX_LENGTH:
+                                    current_chunk += line + '\n'
+                                else:
+                                    if current_chunk:
+                                        chunks.append(current_chunk.strip())
+                                    current_chunk = line + '\n'
+
+                            if current_chunk:
+                                chunks.append(current_chunk.strip())
+
+                            # Send chunks
+                            for i, chunk in enumerate(chunks, 1):
+                                header = f"📄 Part {i}/{len(chunks)}\n\n" if len(chunks) > 1 else ""
+                                await self.app.bot.send_message(
+                                    chat_id=chat_id,
+                                    text=header + chunk
+                                )
+                                await asyncio.sleep(0.5)  # Rate limiting
+
+                            logger.info(f"✅ Sent response to chat {chat_id} ({len(message_text)} chars in {len(chunks)} parts)")
 
                         # Delete from outgoing queue
                         self.queue.delete_outgoing(queued_message.path)
