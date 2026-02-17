@@ -1,0 +1,62 @@
+#!/usr/bin/env python3
+"""
+Telegram Send Skill
+
+Send a message via Telegram bot.
+
+Usage:
+  /telegram-send "Hello from CLI!"
+  /telegram-send "Daily report: All systems operational"
+
+Sends message through the Telegram bot to your chat.
+"""
+
+import sys
+import os
+from pathlib import Path
+
+
+def main():
+    """Send message via Telegram"""
+
+    # Get message from arguments
+    if len(sys.argv) < 2:
+        print("❌ Please provide a message!")
+        print("\nUsage:")
+        print('  /telegram-send "Hello from CLI!"')
+        print('  /telegram-send "Daily report complete"')
+        return 1
+
+    # Join all arguments as the message
+    message = " ".join(sys.argv[1:])
+
+    print(f"📱 Sending to Telegram: {message}\n")
+    print("=" * 70)
+
+    # Write message to outgoing queue
+    try:
+        from agency.core.queue import FileQueue
+
+        queue_path = Path.home() / ".agency" / "queue"
+        queue = FileQueue(queue_path)
+
+        # Get Telegram chat ID from environment
+        chat_id = os.getenv("TELEGRAM_CHAT_ID")
+        if not chat_id:
+            print("❌ TELEGRAM_CHAT_ID not set in environment")
+            return 1
+
+        # Queue outgoing message
+        queue.write_outgoing_telegram(chat_id, message)
+
+        print("✅ Message queued for Telegram delivery")
+        print(f"   Message: {message}")
+        return 0
+
+    except Exception as e:
+        print(f"❌ Error sending to Telegram: {e}")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,65 @@
+#!/usr/bin/env python3
+"""
+Productivity Dashboard Skill
+
+Complete productivity overview: emails, calendar, tasks, files.
+
+Usage:
+  /productivity
+  /productivity --detailed
+
+Shows:
+  - Unread emails count
+  - Today's calendar events
+  - Next meeting
+  - Recent Drive files
+  - Action items
+
+Calls the CC agent for comprehensive dashboard.
+"""
+
+import sys
+import subprocess
+
+
+def main():
+    """Show productivity dashboard"""
+
+    print("📊 Productivity Dashboard\n")
+    print("=" * 70)
+
+    # Default message: comprehensive overview
+    message = """
+    Give me a complete productivity dashboard with:
+    1. Unread emails summary (count and key senders)
+    2. Today's calendar events
+    3. Next meeting details
+    4. Recent Google Drive files
+    5. Action items and priorities
+    """
+
+    # Check for detailed flag
+    if "--detailed" in sys.argv:
+        message += "\nProvide detailed information for each section."
+
+    # Run the CC agent
+    try:
+        result = subprocess.run(
+            [
+                "python", "-m", "agency", "debug", "test", "cc",
+                "--message", message
+            ],
+            cwd="/home/user/agents",
+            capture_output=False,
+            text=True
+        )
+
+        return result.returncode
+
+    except Exception as e:
+        print(f"❌ Error getting dashboard: {e}")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
