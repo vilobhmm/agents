@@ -366,16 +366,26 @@ class AgencyProcessor:
 async def main():
     """Run the agency processor"""
     import sys
+    from pathlib import Path
     from dotenv import load_dotenv
     from agency.config import load_config
 
     # Load environment
     load_dotenv()
 
-    # Setup logging
+    # Setup logging to both file and console
+    log_dir = Path.home() / ".agency" / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_file = log_dir / "processor.log"
+
+    # Configure logging with both file and console handlers
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(log_file),
+            logging.StreamHandler(sys.stdout)
+        ]
     )
 
     logger.info("🔄 Starting Agency Message Processor...")
