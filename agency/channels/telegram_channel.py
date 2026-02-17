@@ -625,12 +625,15 @@ Just message me naturally with an @mention!
 
                     # Send response
                     try:
+                        message_text = queued_message.data.message
+                        logger.info(f"📤 Sending response to chat {chat_id}: {repr(message_text[:100])}")
+
                         await self.app.bot.send_message(
                             chat_id=chat_id,
-                            text=queued_message.data.message
+                            text=message_text
                         )
 
-                        logger.info(f"Sent response to chat {chat_id}")
+                        logger.info(f"✅ Sent response to chat {chat_id} ({len(message_text)} chars)")
 
                         # Delete from outgoing queue
                         self.queue.delete_outgoing(queued_message.path)
