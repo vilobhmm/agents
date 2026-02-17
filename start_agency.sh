@@ -7,8 +7,8 @@ set -e
 # Activate virtual environment
 source agents-venv/bin/activate
 
-# Set environment
-export $(cat .env | xargs)
+# Set environment (filter out comments and empty lines)
+export $(grep -v '^#' .env | grep -v '^$' | xargs)
 
 echo "🚀 Starting Agency System..."
 echo ""
