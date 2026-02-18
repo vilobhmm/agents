@@ -243,6 +243,29 @@ class CoreCommands(BaseCommands):
         logger.info("  - Google Labs CC (https://labs.google/cc)")
         return 0
 
+    def web(self, args):
+        """Start the web UI control center"""
+        logger.info("🌐 Starting Agency Web UI...")
+
+        try:
+            from agency.web.server import run_server
+            run_server(
+                host=args.host,
+                port=args.port,
+                open_browser=not args.no_open
+            )
+        except ImportError as e:
+            logger.error("❌ Web UI dependencies not installed")
+            logger.error(f"   Error: {e}")
+            logger.error("   Install with: pip install fastapi uvicorn[standard]")
+            return 1
+        except KeyboardInterrupt:
+            logger.info("\n✨ Web UI stopped")
+            return 0
+        except Exception as e:
+            logger.error(f"❌ Failed to start web UI: {e}")
+            return 1
+
     def init(self, args):
         """Initialize Agency workspace"""
         logger.info("🎬 Initializing Agency workspace...")
