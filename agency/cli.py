@@ -151,6 +151,28 @@ For more help: agency <command> --help
             help='Show version information'
         )
 
+        # Web UI
+        web_parser = subparsers.add_parser(
+            'web',
+            help='Start the web UI control center'
+        )
+        web_parser.add_argument(
+            '--port',
+            type=int,
+            default=3000,
+            help='Port to run on (default: 3000)'
+        )
+        web_parser.add_argument(
+            '--host',
+            default='0.0.0.0',
+            help='Host to bind to (default: 0.0.0.0)'
+        )
+        web_parser.add_argument(
+            '--no-open',
+            action='store_true',
+            help='Don\'t open browser automatically'
+        )
+
         # Init
         init_parser = subparsers.add_parser(
             'init',
@@ -599,6 +621,8 @@ For more help: agency <command> --help
             return CoreCommands().logs(args)
         elif args.command == 'version':
             return CoreCommands().version(args)
+        elif args.command == 'web':
+            return CoreCommands().web(args)
         elif args.command == 'init':
             return CoreCommands().init(args)
 

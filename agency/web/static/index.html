@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agency — Multi-Agent Control Center</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        /* ─── Reset & Base ──────────────────────────────────────── */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #141824;
+            --bg-tertiary: #1a1f35;
+            --bg-card: #1e2438;
+            --border: #2a3354;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent: #8b5cf6;
+            --accent-bright: #a78bfa;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --blue: #3b82f6;
+
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* ─── Layout ─────────────────────────────────────────────── */
+        .container {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            height: 100vh;
+        }
+
+        header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo i {
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, var(--accent), var(--blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .stat-value {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: 280px 1fr 320px;
+            gap: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* ─── Sidebar ────────────────────────────────────────────── */
+        .sidebar {
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar-section {
+            padding: 1.5rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-section h2 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+        }
+
+        .agent-list, .team-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .agent-item, .team-item {
+            padding: 0.625rem 0.75rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            background: transparent;
+            border: 1px solid transparent;
+        }
+
+        .agent-item:hover, .team-item:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--border);
+        }
+
+        .agent-item.active, .team-item.active {
+            background: var(--bg-card);
+            border-color: var(--accent);
+        }
+
+        .agent-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .agent-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .agent-name {
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .agent-status {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .agent-badge {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .agent-badge.active {
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        /* ─── Main Content ───────────────────────────────────────── */
+        .content {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: var(--bg-primary);
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
+        .conversation-group {
+            margin-bottom: 2rem;
+            background: var(--bg-secondary);
+            border-radius: 0.75rem;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .conversation-header {
+            padding: 1rem 1.25rem;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .conversation-title {
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .conversation-meta {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .pending-badge {
+            background: var(--warning);
+            color: #000;
+            padding: 0.125rem 0.5rem;
+            border-radius: 1rem;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+
+        .pending-badge.complete {
+            background: var(--success);
+        }
+
+        .conversation-messages {
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+            flex-shrink: 0;
+        }
+
+        .message-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.375rem;
+        }
+
+        .message-author {
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .message-body {
+            background: var(--bg-card);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+            line-height: 1.6;
+        }
+
+        .message-body p {
+            margin-bottom: 0.5rem;
+        }
+
+        .message-body p:last-child {
+            margin-bottom: 0;
+        }
+
+        .message-body code {
+            background: var(--bg-primary);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-family: var(--font-mono);
+            font-size: 0.875em;
+        }
+
+        .message-body pre {
+            background: var(--bg-primary);
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            overflow-x: auto;
+            margin: 0.5rem 0;
+        }
+
+        .message-body pre code {
+            background: none;
+            padding: 0;
+        }
+
+        /* ─── Input Area ─────────────────────────────────────────── */
+        .input-container {
+            padding: 1rem 1.5rem;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-end;
+        }
+
+        .input-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .target-selector {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .target-selector label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .target-selector select {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-family: var(--font-sans);
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        .input-field {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-family: var(--font-sans);
+            font-size: 0.875rem;
+            resize: vertical;
+            min-height: 60px;
+            max-height: 200px;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .send-button {
+            background: linear-gradient(135deg, var(--accent), var(--blue));
+            color: #fff;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s, opacity 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .send-button:hover {
+            transform: translateY(-1px);
+            opacity: 0.9;
+        }
+
+        .send-button:active {
+            transform: translateY(0);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ─── Right Panel ────────────────────────────────────────── */
+        .right-panel {
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-section {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-header {
+            padding: 1rem 1.25rem;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+
+        .panel-content {
+            padding: 1rem 1.25rem;
+        }
+
+        .queue-pipeline {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .queue-stage {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.625rem 0.875rem;
+            background: var(--bg-tertiary);
+            border-radius: 0.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .queue-stage-name {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .queue-stage-count {
+            font-weight: 700;
+            font-size: 1.125rem;
+            color: var(--text-primary);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .log-stream {
+            flex: 1;
+            overflow-y: auto;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            line-height: 1.5;
+            padding: 0.75rem;
+            background: var(--bg-primary);
+        }
+
+        .log-line {
+            margin-bottom: 0.25rem;
+            word-wrap: break-word;
+        }
+
+        .log-line.info { color: var(--blue); }
+        .log-line.warning { color: var(--warning); }
+        .log-line.error { color: var(--error); }
+        .log-line.success { color: var(--success); }
+
+        /* ─── Empty States ───────────────────────────────────────── */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.125rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state p {
+            font-size: 0.875rem;
+        }
+
+        /* ─── Quick Actions ──────────────────────────────────────── */
+        .quick-actions {
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+
+        .quick-action {
+            padding: 0.625rem 0.875rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .quick-action:hover {
+            background: var(--bg-card);
+            border-color: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        /* ─── Utilities ──────────────────────────────────────────── */
+        .hidden { display: none !important; }
+
+        /* ─── Scrollbar ──────────────────────────────────────────── */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* ─── Loading ────────────────────────────────────────────── */
+        .loading {
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            animation: loading 1.4s infinite;
+        }
+
+        @keyframes loading {
+            0%, 80%, 100% { opacity: 0; }
+            40% { opacity: 1; }
+        }
+
+        /* ─── Responsive ─────────────────────────────────────────── */
+        @media (max-width: 1200px) {
+            main {
+                grid-template-columns: 240px 1fr 280px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            main {
+                grid-template-columns: 200px 1fr;
+            }
+            .right-panel {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <i class="fa-solid fa-robot"></i>
+                <h1>Agency Control Center</h1>
+            </div>
+            <div class="header-stats">
+                <div class="stat">
+                    <div class="status-indicator"></div>
+                    <span>Live</span>
+                </div>
+                <div class="stat">
+                    <i class="fa-solid fa-robot"></i>
+                    <span class="stat-value" id="agent-count">—</span>
+                    <span>Agents</span>
+                </div>
+                <div class="stat">
+                    <i class="fa-solid fa-inbox"></i>
+                    <span class="stat-value" id="queue-total">—</span>
+                    <span>Queued</span>
+                </div>
+                <div class="stat">
+                    <i class="fa-solid fa-comments"></i>
+                    <span class="stat-value" id="conv-count">—</span>
+                    <span>Conversations</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main -->
+        <main>
+            <!-- Left Sidebar: Agents & Teams -->
+            <aside class="sidebar">
+                <div class="sidebar-section">
+                    <h2>Quick Actions</h2>
+                    <div class="quick-actions">
+                        <div class="quick-action" data-action="briefing">📬 Briefing</div>
+                        <div class="quick-action" data-action="calendar">📅 Calendar</div>
+                        <div class="quick-action" data-action="emails">📧 Emails</div>
+                        <div class="quick-action" data-action="jobs">💼 Jobs</div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h2>Agents</h2>
+                    <div class="agent-list" id="agent-list"></div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h2>Teams</h2>
+                    <div class="team-list" id="team-list"></div>
+                </div>
+            </aside>
+
+            <!-- Main Content: Conversations -->
+            <section class="content">
+                <div class="chat-container" id="chat-container">
+                    <div class="empty-state">
+                        <i class="fa-solid fa-messages"></i>
+                        <h3>No conversations yet</h3>
+                        <p>Send a message to an agent to get started</p>
+                    </div>
+                </div>
+
+                <!-- Input -->
+                <div class="input-container">
+                    <div class="input-wrapper">
+                        <div class="input-group">
+                            <div class="target-selector">
+                                <label>To:</label>
+                                <select id="target-type">
+                                    <option value="agent">Agent</option>
+                                    <option value="team">Team</option>
+                                </select>
+                                <select id="target-agent"></select>
+                                <select id="target-team" class="hidden"></select>
+                            </div>
+                            <textarea
+                                class="input-field"
+                                id="message-input"
+                                placeholder="Type your message..."></textarea>
+                        </div>
+                        <button class="send-button" id="send-button">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            Send
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: System Status -->
+            <aside class="right-panel">
+                <div class="panel-section">
+                    <div class="panel-header">Message Queue</div>
+                    <div class="panel-content">
+                        <div class="queue-pipeline">
+                            <div class="queue-stage">
+                                <span class="queue-stage-name">
+                                    <i class="fa-solid fa-inbox"></i>
+                                    Incoming
+                                </span>
+                                <span class="queue-stage-count" id="queue-incoming">0</span>
+                            </div>
+                            <div class="queue-stage">
+                                <span class="queue-stage-name">
+                                    <i class="fa-solid fa-gear"></i>
+                                    Processing
+                                </span>
+                                <span class="queue-stage-count" id="queue-processing">0</span>
+                            </div>
+                            <div class="queue-stage">
+                                <span class="queue-stage-name">
+                                    <i class="fa-solid fa-check"></i>
+                                    Outgoing
+                                </span>
+                                <span class="queue-stage-count" id="queue-outgoing">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-section" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                    <div class="panel-header">Live Logs</div>
+                    <div class="log-stream" id="log-stream"></div>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <script>
+        // ─── State ────────────────────────────────────────────────────────
+        const state = {
+            agents: [],
+            teams: [],
+            conversations: [],
+            queue: { incoming: 0, processing: 0, outgoing: 0 },
+            workspace: {},
+            selectedTarget: null,
+            selectedType: 'agent',
+        };
+
+        // ─── Agent Colors ─────────────────────────────────────────────────
+        const AGENT_COLORS = {
+            cc: '#3b82f6',
+            researcher: '#8b5cf6',
+            writer: '#10b981',
+            job_hunter: '#f59e0b',
+            social: '#ec4899',
+            coordinator: '#6366f1',
+            curator: '#14b8a6',
+            resume_optimizer: '#f97316',
+            networker: '#06b6d4',
+            assistant: '#84cc16',
+            action_taker: '#ef4444',
+        };
+
+        function getAgentColor(agentId) {
+            return AGENT_COLORS[agentId] || '#64748b';
+        }
+
+        function getInitials(name) {
+            return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+        }
+
+        // ─── WebSocket ────────────────────────────────────────────────────
+        let ws = null;
+
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws`;
+
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log('WebSocket connected');
+            };
+
+            ws.onmessage = (event) => {
+                const msg = JSON.parse(event.data);
+                handleWebSocketMessage(msg);
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket disconnected, reconnecting...');
+                setTimeout(connectWebSocket, 2000);
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+        }
+
+        function handleWebSocketMessage(msg) {
+            switch (msg.type) {
+                case 'init':
+                    state.agents = msg.data.agents || [];
+                    state.teams = msg.data.teams || [];
+                    state.queue = msg.data.queue || {};
+                    state.conversations = msg.data.conversations || [];
+                    state.workspace = msg.data.workspace || {};
+                    renderAgents();
+                    renderTeams();
+                    renderConversations();
+                    updateQueueCounts();
+                    renderLogs(msg.data.logs || []);
+                    break;
+
+                case 'queue_update':
+                    state.queue = msg.data;
+                    updateQueueCounts();
+                    break;
+
+                case 'conversations_update':
+                    state.conversations = msg.data;
+                    renderConversations();
+                    break;
+
+                case 'log_lines':
+                    appendLogs(msg.data);
+                    break;
+
+                case 'workspace_update':
+                    state.workspace = msg.data;
+                    renderAgents();
+                    break;
+
+                case 'message_sent':
+                    // Optionally show a toast or highlight
+                    break;
+
+                case 'ping':
+                    ws.send(JSON.stringify({ type: 'pong' }));
+                    break;
+            }
+        }
+
+        // ─── API Calls ────────────────────────────────────────────────────
+        async function loadAgents() {
+            const res = await fetch('/api/agents');
+            const data = await res.json();
+            state.agents = data.agents || [];
+            renderAgents();
+        }
+
+        async function loadTeams() {
+            const res = await fetch('/api/teams');
+            const data = await res.json();
+            state.teams = data.teams || [];
+            renderTeams();
+        }
+
+        async function sendMessage(message, agent = null, team = null) {
+            const res = await fetch('/api/messages', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message, agent, team }),
+            });
+            return res.json();
+        }
+
+        // ─── Rendering ────────────────────────────────────────────────────
+        function renderAgents() {
+            const container = document.getElementById('agent-list');
+            const select = document.getElementById('target-agent');
+
+            container.innerHTML = '';
+            select.innerHTML = '';
+
+            state.agents.forEach(agent => {
+                const color = getAgentColor(agent.agent_id);
+                const initials = getInitials(agent.name);
+                const wsInfo = state.workspace[agent.agent_id] || {};
+                const isActive = wsInfo.has_history && wsInfo.last_active;
+
+                // Sidebar item
+                const item = document.createElement('div');
+                item.className = 'agent-item';
+                item.dataset.agentId = agent.agent_id;
+                item.innerHTML = `
+                    <div class="agent-avatar" style="background: ${color}22; color: ${color}">
+                        ${initials}
+                    </div>
+                    <div class="agent-info">
+                        <div class="agent-name">${agent.name}</div>
+                        <div class="agent-status">${agent.model}</div>
+                    </div>
+                    <div class="agent-badge ${isActive ? 'active' : ''}"></div>
+                `;
+                item.onclick = () => selectAgent(agent.agent_id);
+                container.appendChild(item);
+
+                // Select option
+                const option = document.createElement('option');
+                option.value = agent.agent_id;
+                option.textContent = agent.name;
+                select.appendChild(option);
+            });
+
+            // Update header count
+            document.getElementById('agent-count').textContent = state.agents.length;
+        }
+
+        function renderTeams() {
+            const container = document.getElementById('team-list');
+            const select = document.getElementById('target-team');
+
+            container.innerHTML = '';
+            select.innerHTML = '';
+
+            state.teams.forEach(team => {
+                // Sidebar item
+                const item = document.createElement('div');
+                item.className = 'team-item';
+                item.dataset.teamId = team.team_id;
+                item.innerHTML = `
+                    <div class="agent-avatar" style="background: #f59e0b22; color: #f59e0b">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div class="agent-info">
+                        <div class="agent-name">${team.name}</div>
+                        <div class="agent-status">${team.agents.length} agents</div>
+                    </div>
+                `;
+                item.onclick = () => selectTeam(team.team_id);
+                container.appendChild(item);
+
+                // Select option
+                const option = document.createElement('option');
+                option.value = team.team_id;
+                option.textContent = team.name;
+                select.appendChild(option);
+            });
+        }
+
+        function renderConversations() {
+            const container = document.getElementById('chat-container');
+
+            if (state.conversations.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-solid fa-messages"></i>
+                        <h3>No conversations yet</h3>
+                        <p>Send a message to an agent to get started</p>
+                    </div>
+                `;
+                document.getElementById('conv-count').textContent = '0';
+                return;
+            }
+
+            container.innerHTML = '';
+            state.conversations.forEach(conv => {
+                const group = document.createElement('div');
+                group.className = 'conversation-group';
+
+                const isPending = conv.pending > 0;
+                const timestamp = new Date(conv.created_at * 1000).toLocaleString();
+
+                group.innerHTML = `
+                    <div class="conversation-header">
+                        <div class="conversation-title">
+                            ${conv.sender}: ${conv.original_message.slice(0, 60)}${conv.original_message.length > 60 ? '...' : ''}
+                        </div>
+                        <div class="conversation-meta">
+                            <span>${timestamp}</span>
+                            <span class="pending-badge ${isPending ? '' : 'complete'}">
+                                ${isPending ? `Pending: ${conv.pending}` : 'Complete'}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="conversation-messages">
+                        <div class="message">
+                            <div class="message-avatar" style="background: #64748b22; color: #64748b">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                            <div class="message-content">
+                                <div class="message-header">
+                                    <span class="message-author">${conv.sender}</span>
+                                    <span class="message-time">${new Date(conv.created_at * 1000).toLocaleTimeString()}</span>
+                                </div>
+                                <div class="message-body">
+                                    ${escapeHtml(conv.original_message)}
+                                </div>
+                            </div>
+                        </div>
+                        ${conv.responses.map(r => renderMessage(r)).join('')}
+                    </div>
+                `;
+
+                container.appendChild(group);
+            });
+
+            // Update count
+            document.getElementById('conv-count').textContent = state.conversations.length;
+
+            // Scroll to bottom
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function renderMessage(response) {
+            const color = getAgentColor(response.agent_id);
+            const initials = getInitials(response.agent_name);
+            const time = response.timestamp ? new Date(response.timestamp * 1000).toLocaleTimeString() : '';
+
+            // Use marked.js for markdown rendering
+            const html = marked.parse(response.response);
+
+            return `
+                <div class="message">
+                    <div class="message-avatar" style="background: ${color}22; color: ${color}">
+                        ${initials}
+                    </div>
+                    <div class="message-content">
+                        <div class="message-header">
+                            <span class="message-author">${response.agent_name}</span>
+                            <span class="message-time">${time}</span>
+                        </div>
+                        <div class="message-body">
+                            ${html}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateQueueCounts() {
+            document.getElementById('queue-incoming').textContent = state.queue.incoming || 0;
+            document.getElementById('queue-processing').textContent = state.queue.processing || 0;
+            document.getElementById('queue-outgoing').textContent = state.queue.outgoing || 0;
+
+            const total = (state.queue.incoming || 0) + (state.queue.processing || 0) + (state.queue.outgoing || 0);
+            document.getElementById('queue-total').textContent = total;
+        }
+
+        function renderLogs(lines) {
+            const container = document.getElementById('log-stream');
+            container.innerHTML = lines.map(line => {
+                let className = 'log-line';
+                if (line.includes('ERROR')) className += ' error';
+                else if (line.includes('WARNING')) className += ' warning';
+                else if (line.includes('INFO')) className += ' info';
+                return `<div class="${className}">${escapeHtml(line)}</div>`;
+            }).join('');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function appendLogs(lines) {
+            const container = document.getElementById('log-stream');
+            lines.forEach(line => {
+                let className = 'log-line';
+                if (line.includes('ERROR')) className += ' error';
+                else if (line.includes('WARNING')) className += ' warning';
+                else if (line.includes('INFO')) className += ' info';
+
+                const div = document.createElement('div');
+                div.className = className;
+                div.textContent = line;
+                container.appendChild(div);
+            });
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // ─── Interactions ─────────────────────────────────────────────────
+        function selectAgent(agentId) {
+            state.selectedTarget = agentId;
+            state.selectedType = 'agent';
+
+            document.querySelectorAll('.agent-item').forEach(el => {
+                el.classList.toggle('active', el.dataset.agentId === agentId);
+            });
+            document.querySelectorAll('.team-item').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            document.getElementById('target-agent').value = agentId;
+            document.getElementById('target-type').value = 'agent';
+            switchTargetType('agent');
+        }
+
+        function selectTeam(teamId) {
+            state.selectedTarget = teamId;
+            state.selectedType = 'team';
+
+            document.querySelectorAll('.team-item').forEach(el => {
+                el.classList.toggle('active', el.dataset.teamId === teamId);
+            });
+            document.querySelectorAll('.agent-item').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            document.getElementById('target-team').value = teamId;
+            document.getElementById('target-type').value = 'team';
+            switchTargetType('team');
+        }
+
+        function switchTargetType(type) {
+            const agentSelect = document.getElementById('target-agent');
+            const teamSelect = document.getElementById('target-team');
+
+            if (type === 'agent') {
+                agentSelect.classList.remove('hidden');
+                teamSelect.classList.add('hidden');
+            } else {
+                agentSelect.classList.add('hidden');
+                teamSelect.classList.remove('hidden');
+            }
+        }
+
+        async function handleSendMessage() {
+            const input = document.getElementById('message-input');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            const targetType = document.getElementById('target-type').value;
+            const agent = targetType === 'agent' ? document.getElementById('target-agent').value : null;
+            const team = targetType === 'team' ? document.getElementById('target-team').value : null;
+
+            // Send
+            await sendMessage(message, agent, team);
+
+            // Clear input
+            input.value = '';
+        }
+
+        // ─── Quick Actions ────────────────────────────────────────────────
+        document.querySelectorAll('.quick-action').forEach(btn => {
+            btn.onclick = async () => {
+                const action = btn.dataset.action;
+                const commands = {
+                    briefing: '@cc Give me my morning briefing',
+                    calendar: '@cc What\'s on my calendar today?',
+                    emails: '@cc Check my unread emails',
+                    jobs: '@job_hunter Find recent AI jobs',
+                };
+
+                if (commands[action]) {
+                    const [agent] = commands[action].match(/@(\w+)/);
+                    await sendMessage(commands[action], agent.slice(1));
+                }
+            };
+        });
+
+        // ─── Event Listeners ──────────────────────────────────────────────
+        document.getElementById('send-button').onclick = handleSendMessage;
+
+        document.getElementById('message-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                handleSendMessage();
+            }
+        });
+
+        document.getElementById('target-type').onchange = (e) => {
+            switchTargetType(e.target.value);
+        };
+
+        // ─── Utilities ────────────────────────────────────────────────────
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ─── Initialize ───────────────────────────────────────────────────
+        connectWebSocket();
+        loadAgents();
+        loadTeams();
+    </script>
+</body>
+</html>
