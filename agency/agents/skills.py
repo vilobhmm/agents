@@ -22,6 +22,14 @@ except ImportError:
     INTEGRATIONS_AVAILABLE = False
     logging.warning("Integrations not available. Install openclaw integrations first.")
 
+# Import feedback skills
+try:
+    from agency.agents.feedback_skills import FeedbackSkills
+    FEEDBACK_SKILLS_AVAILABLE = True
+except ImportError:
+    FEEDBACK_SKILLS_AVAILABLE = False
+    logging.warning("Feedback skills not available.")
+
 
 logger = logging.getLogger(__name__)
 
