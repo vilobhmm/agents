@@ -85,6 +85,13 @@ class TelegramChannel:
         # Other Commands
         self.app.add_handler(CommandHandler("research", self._handle_research))
 
+        # Feedback Management Commands
+        self.app.add_handler(CommandHandler("submitfeedback", self._handle_submit_feedback))
+        self.app.add_handler(CommandHandler("clusterfeedback", self._handle_cluster_feedback))
+        self.app.add_handler(CommandHandler("trackbugs", self._handle_track_bugs))
+        self.app.add_handler(CommandHandler("generatesolutions", self._handle_generate_solutions))
+        self.app.add_handler(CommandHandler("feedbackreport", self._handle_feedback_report))
+
         # Add message handler (non-commands)
         self.app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self._handle_message))
 
@@ -114,6 +121,13 @@ class TelegramChannel:
             BotCommand("jobsearch", "🔍 Custom job search"),
             BotCommand("trackjobs", "📊 View tracked jobs"),
             BotCommand("applications", "📝 View applications"),
+
+            # Feedback Management Commands
+            BotCommand("submitfeedback", "📝 Submit user feedback"),
+            BotCommand("clusterfeedback", "🎯 Cluster feedback by theme"),
+            BotCommand("trackbugs", "🐛 Track bugs from feedback"),
+            BotCommand("generatesolutions", "💡 Generate solutions & PRDs"),
+            BotCommand("feedbackreport", "📊 Feedback analytics report"),
 
             # System Commands
             BotCommand("help", "❓ Full command list"),
@@ -220,6 +234,14 @@ class TelegramChannel:
             help_text += "  Example: `/jobsearch Java Developer at TCS`\n"
             help_text += "• `/trackjobs` - View tracked jobs\n"
             help_text += "• `/applications` - View your applications\n\n"
+
+            help_text += "**📋 Feedback Management Commands:**\n"
+            help_text += "• `/submitfeedback <text>` - Submit user feedback\n"
+            help_text += "  Example: `/submitfeedback App is slow`\n"
+            help_text += "• `/clusterfeedback` - Group feedback by theme\n"
+            help_text += "• `/trackbugs` - Create bugs from clusters\n"
+            help_text += "• `/generatesolutions` - Generate PRDs & solutions\n"
+            help_text += "• `/feedbackreport` - Analytics report\n\n"
 
             help_text += "**🔧 System Commands:**\n"
             help_text += "• `/agents` - List all agents\n"
@@ -693,6 +715,146 @@ Just message me naturally with an @mention!
         self.queue.enqueue(message_data, "incoming")
         logger.info(f"EOD summary requested by {user.username}")
         await update.message.reply_text("🌙 Wrapping up your day...")
+
+    # ─── Feedback Management Handlers ─────────────────────────────────────────
+
+    async def _handle_submit_feedback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /submitfeedback command - submit user feedback"""
+        user = update.effective_user
+
+        # Get feedback text from args
+        if not context.args:
+            await update.message.reply_text(
+                "📝 **Submit Feedback**\n\n"
+                "Usage: `/submitfeedback Your feedback here`\n\n"
+                "Example: `/submitfeedback The app is very slow when loading the dashboard`"
+            )
+            return
+
+        feedback_text = " ".join(context.args)
+
+        message_data = MessageData(
+            channel="telegram",
+            sender=user.username or user.first_name,
+            sender_id=str(user.id),
+            message=f"@feedback_coordinator Submit this user feedback: '{feedback_text}' - Category: user_report, Severity: medium, User: {user.username or user.first_name}",
+            timestamp=time.time(),
+            message_id=str(update.message.message_id),
+            metadata={
+                "chat_id": update.effective_chat.id,
+                "user_id": user.id,
+                "feedback_type": "telegram_command"
+            }
+        )
+
+        self.queue.enqueue(message_data, "incoming")
+        logger.info(f"Feedback submitted by {user.username}: {feedback_text[:50]}...")
+        await update.message.reply_text(
+            "✅ **Feedback Submitted!**\n\n"
+            f"📝 {feedback_text}\n\n"
+            "The feedback team will analyze and cluster this with similar reports. "
+            "Thank you for helping us improve!"
+        )
+
+    async def _handle_cluster_feedback(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /clusterfeedback command - cluster feedback into themes"""
+        user = update.effective_user
+
+        message_data = MessageData(
+            channel="telegram",
+            sender=user.username or user.first_name,
+            sender_id=str(user.id),
+            message="@feedback_team Run the cluster-feedback skill to group all new feedback reports into themes. Identify patterns, create clusters with high-level themes, perform root cause analysis, and report on the clusters created.",
+            timestamp=time.time(),
+            message_id=str(update.message.message_id),
+            metadata={
+                "chat_id": update.effective_chat.id,
+                "user_id": user.id,
+            }
+        )
+
+        self.queue.enqueue(message_data, "incoming")
+        logger.info(f"Cluster feedback requested by {user.username}")
+        await update.message.reply_text(
+            "🎯 **Clustering Feedback...**\n\n"
+            "Analyzing feedback reports and grouping by theme...\n"
+            "This may take a moment."
+        )
+
+    async def _handle_track_bugs(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /trackbugs command - track bugs from feedback clusters"""
+        user = update.effective_user
+
+        message_data = MessageData(
+            channel="telegram",
+            sender=user.username or user.first_name,
+            sender_id=str(user.id),
+            message="@feedback_team Run the track-bugs skill to create bugs from feedback clusters and post updates on existing bugs when new related reports arrive. Report on bugs created and updated.",
+            timestamp=time.time(),
+            message_id=str(update.message.message_id),
+            metadata={
+                "chat_id": update.effective_chat.id,
+                "user_id": user.id,
+            }
+        )
+
+        self.queue.enqueue(message_data, "incoming")
+        logger.info(f"Track bugs requested by {user.username}")
+        await update.message.reply_text(
+            "🐛 **Tracking Bugs...**\n\n"
+            "Creating and updating bug reports from feedback clusters..."
+        )
+
+    async def _handle_generate_solutions(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /generatesolutions command - generate PRDs and solutions"""
+        user = update.effective_user
+
+        message_data = MessageData(
+            channel="telegram",
+            sender=user.username or user.first_name,
+            sender_id=str(user.id),
+            message="@feedback_team Run the generate-solutions skill to create comprehensive solutions for all open bugs. Include PRDs (Product Requirement Documents), coding agent prompts, trade-off analysis, and effort estimates. Report on solutions generated.",
+            timestamp=time.time(),
+            message_id=str(update.message.message_id),
+            metadata={
+                "chat_id": update.effective_chat.id,
+                "user_id": user.id,
+            }
+        )
+
+        self.queue.enqueue(message_data, "incoming")
+        logger.info(f"Generate solutions requested by {user.username}")
+        await update.message.reply_text(
+            "💡 **Generating Solutions...**\n\n"
+            "Creating PRDs, prototypes, and coding prompts for bugs...\n"
+            "This will include trade-offs and effort estimates."
+        )
+
+    async def _handle_feedback_report(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Handle /feedbackreport command - get analytics report"""
+        user = update.effective_user
+
+        message_data = MessageData(
+            channel="telegram",
+            sender=user.username or user.first_name,
+            sender_id=str(user.id),
+            message="@feedback_team Run the feedback-report skill to generate a comprehensive analytics report. Include: total feedback count, status breakdown, top issues by feedback count, trend analysis, bug statistics, and solution progress. Present in a clear, formatted summary.",
+            timestamp=time.time(),
+            message_id=str(update.message.message_id),
+            metadata={
+                "chat_id": update.effective_chat.id,
+                "user_id": user.id,
+            }
+        )
+
+        self.queue.enqueue(message_data, "incoming")
+        logger.info(f"Feedback report requested by {user.username}")
+        await update.message.reply_text(
+            "📊 **Generating Feedback Report...**\n\n"
+            "Analyzing system-wide feedback metrics, trends, and top issues..."
+        )
+
+    # ──────────────────────────────────────────────────────────────────────────
 
     async def _handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle incoming messages"""
