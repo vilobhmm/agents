@@ -158,7 +158,7 @@ LINKEDIN_CLIENT_SECRET=
 
 ## 📱 Telegram Setup
 
-### Step 1: Create Your Bot
+### Step 1: Create Bot
 
 1. **Open Telegram** and search for `@BotFather`
 
