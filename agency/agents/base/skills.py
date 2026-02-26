@@ -24,7 +24,7 @@ except ImportError:
 
 # Import feedback skills
 try:
-    from agency.agents.feedback_skills import FeedbackSkills
+    from agency.agents.feedback.feedback_skills import FeedbackSkills
     FEEDBACK_SKILLS_AVAILABLE = True
 except ImportError:
     FEEDBACK_SKILLS_AVAILABLE = False
