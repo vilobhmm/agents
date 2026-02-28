@@ -22,17 +22,17 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from agency.adk.core.adk_framework import (
+from integrations.adk.core.adk_framework import (
     ADKAgent,
     MultiAgentOrchestrator
 )
-from agency.adk.integrations.observability.observability_integrations import (
+from integrations.adk.integrations.observability.observability_integrations import (
     create_observability_stack
 )
-from agency.adk.integrations.platforms.integration_platforms import (
+from integrations.adk.integrations.platforms.integration_platforms import (
     create_integration_platforms
 )
-from agency.adk.integrations.ai_ecosystem.ai_ecosystem_integrations import (
+from integrations.adk.integrations.ai_ecosystem.ai_ecosystem_integrations import (
     create_ai_ecosystem_integrations
 )
 

@@ -22,12 +22,12 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from agency.voice.voice_skills import VoiceSkills
-from agency.agents.voice.dictation.dictation_agent import DictationAgent
-from agency.agents.voice.productivity.productivity_agent import ProductivityVoiceAgent
-from agency.agents.voice.ideas_capture.ideas_capture_agent import IdeasCaptureAgent
-from agency.agents.voice.dev_copilot.dev_copilot_agent import DeveloperCopilotAgent
-from agency.agents.voice.voice_coordinator import VoiceCoordinator
+from integrations.voice_core.voice_skills import VoiceSkills
+from agents.voice.dictation.dictation_agent import DictationAgent
+from agents.voice.productivity.productivity_agent import ProductivityVoiceAgent
+from agents.voice.ideas_capture.ideas_capture_agent import IdeasCaptureAgent
+from agents.voice.dev_copilot.dev_copilot_agent import DeveloperCopilotAgent
+from agents.voice.voice_coordinator import VoiceCoordinator
 
 
 def print_header(title):

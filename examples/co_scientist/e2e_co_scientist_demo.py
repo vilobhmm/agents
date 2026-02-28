@@ -17,7 +17,7 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from agency.agents.co_scientist.co_scientist_agent import CoScientistAgent
+from agents.co_scientist.co_scientist_agent import CoScientistAgent
 
 
 def print_header(title):
@@ -279,7 +279,7 @@ async def main():
     print("   1. Try interactive mode:")
     print("      python -m agency.agents.co_scientist.co_scientist_agent")
     print("\n   2. Use in your code:")
-    print("      from agency.agents.co_scientist import CoScientistAgent")
+    print("      from agents.co_scientist import CoScientistAgent")
     print("      agent = CoScientistAgent()")
     print("      result = await agent.literature_review('your topic')")
     print("\n   3. Run complete workflow for your research idea")
