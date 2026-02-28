@@ -1,465 +1,260 @@
-# 🤖 Agency - For Agentic AI
+# 🤖 AI Agents Repository
 
-**Proactive. Personal. Powerful.**
-
-A multi-agent, multi-channel, multi-team system for autonomous AI that works 24/7.
+**Production-ready AI agents with voice, research, and integration capabilities**
 
 ---
 
-## 🚀 **[👉 START HERE: Complete Setup Guide](GETTING_STARTED.md)** 👈
-
-**The definitive step-by-step guide to get ALL agents working with Telegram!**
-
-Includes:
-- ✅ 15-minute setup
-- ✅ Telegram configuration
-- ✅ Google services setup (for CC)
-- ✅ Complete examples for ALL agents
-- ✅ 5 multi-agent team workflows
-- ✅ Troubleshooting
-- ✅ Advanced features
-
-**[📖 Read GETTING_STARTED.md](GETTING_STARTED.md)**
-
----
-
-## ⚡ Quick Start (Already Setup?)
+## 🚀 Quick Start
 
 ```bash
-# 1. Setup
-python -m agency init
+# 1. Install dependencies
+pip install -r requirements.txt
 
-# 2. Configure (.env)
-ANTHROPIC_API_KEY=sk-ant-...
-TELEGRAM_BOT_TOKEN=...
+# 2. Set API keys
+export ANTHROPIC_API_KEY=sk-ant-...
+export OPENAI_API_KEY=sk-...
 
-# 3. Start
-python -m agency start
+# 3. Try an agent
+python -m agents.cc.cc_skills
+```
 
-# 4. Talk to agents via Telegram
-@cc Good morning briefing
-@job_search Find ML Engineer roles
-@feedback Submit feedback report
+**→ [Complete Setup Guide](docs/setup/GETTING_STARTED.md)**
+
+---
+
+## 📁 Repository Structure
+
+```
+/
+├── agents/                # ALL AI AGENTS (main focus)
+│   ├── cc/               # Chief Coordinator - productivity assistant
+│   ├── job_search/       # Job hunting automation
+│   ├── feedback/         # Feedback management
+│   ├── voice/            # 4 voice agents (dictation, productivity, ideas, dev)
+│   └── co_scientist/     # Research & startup co-founder
+│
+├── integrations/          # External integrations
+│   ├── adk/              # Google ADK ecosystem
+│   └── voice_core/       # Voice capabilities (STT/TTS)
+│
+├── core/                  # Core framework
+│   ├── channels/         # Telegram, CLI, Web
+│   ├── templates/        # Agent templates
+│   └── processor.py      # Message processing
+│
+├── examples/              # Working examples
+├── docs/                  # All documentation
+└── tools/                 # Utilities and scripts
 ```
 
 ---
 
-## 📁 Project Structure
+## 🤖 Available Agents
 
-```
-agents/
-├── agency/                    # Core agency system
-│   ├── agents/               # AI agents with specialized skills
-│   │   ├── README.md        # Agent overview
-│   │   ├── cc/              # Chief Coordinator agent
-│   │   │   ├── README.md   # CC complete guide
-│   │   │   └── cc_skills.py
-│   │   ├── job_search/      # Job search agent
-│   │   │   ├── README.md   # Job search guide
-│   │   │   └── job_search_skills.py
-│   │   ├── feedback/        # Feedback management
-│   │   │   ├── README.md   # Feedback guide
-│   │   │   └── feedback_skills.py
-│   │   └── base/            # Base framework
-│   │       └── skills.py
-│   ├── tools/               # Agent tools & utilities
-│   ├── channels/            # Telegram, CLI, Web
-│   ├── core/                # Core system logic
-│   └── templates/           # Agent templates
-├── examples/                 # Working examples & demos
-│   ├── README.md            # Examples overview
-│   ├── feedback/            # Feedback examples
-│   │   ├── README.md       # Feedback examples guide
-│   │   ├── e2e_feedback_github_demo.py
-│   │   └── feedback_management_demo.py
-│   └── basic/               # Basic agent examples
-│       ├── simple_agent.py
-│       ├── proactive_agent.py
-│       └── multi_agent.py
-├── projects/                 # 11 pre-built agent projects
-└── docs/                    # Documentation (all guides)
-```
+### **1. CC Agent** - Chief Coordinator 🎯
+Your personal AI productivity assistant (like Google Labs CC)
+
+- Morning briefings from Gmail, Calendar, Drive
+- Email management and drafting
+- Meeting scheduling
+- Voice-activated commands
+
+**→ [agents/cc/README.md](agents/cc/README.md)**
 
 ---
 
-## 🤖 Your AI Agents
+### **2. Job Search Agent** - Job Hunting Automation 💼
+Automate your job search process
 
-### **@cc - Chief Coordinator** (Like Google Labs CC) 🎯
-Daily briefings from Gmail, Calendar, Drive + takes actions
+- Find relevant job openings
+- Tailor resumes for each role
+- Track applications
+- Network outreach
 
-**📖 [Complete CC Agent Guide →](agency/agents/cc/README.md)**
-
-**Quick features:**
-- ☀️ Morning briefings with priorities
-- 📧 Email management and drafting
-- 📅 Meeting scheduling and prep
-- ✅ Actions: send emails, block time
-- 🤝 Coordinates other agents
+**→ [agents/job_search/README.md](agents/job_search/README.md)**
 
 ---
 
-### **@job_search** - Job hunting automation 💼
-Finds jobs, tailors resume, gets referrals
+### **3. Feedback Agent** - User Feedback Management 📋
+Collect, cluster, and analyze feedback
 
-**📖 [Complete Job Search Guide →](agency/agents/job_search/README.md)**
+- Feedback collection and categorization
+- AI-powered clustering (Claude)
+- Bug tracking
+- Solution generation with PRDs
 
-**Quick features:**
-- 🔍 Find relevant job openings
-- 📝 Tailor resumes automatically
-- 📨 Automate applications
-- 📊 Track application status
-- 🤝 Network outreach
+**→ [agents/feedback/README.md](agents/feedback/README.md)**
 
 ---
 
-### **@feedback** - Feedback Management 📋
-Collect feedback → Cluster by theme → Track bugs → Generate solutions
+### **4. Voice Agents** - Complete Voice System 🎙️
+4 specialized voice agents for hands-free productivity
 
-**📖 [Complete Feedback Guide →](agency/agents/feedback/README.md)**
+- **Dictation**: Voice-to-text for any chat
+- **Productivity**: Voice assistant for daily tasks
+- **Ideas Capture**: Voice-to-Google Docs/Notes
+- **Dev Copilot**: Voice-based pair programming
 
-**Quick features:**
-- 📝 Collect user feedback
-- 🎯 Cluster by theme with Claude AI
-- 🐛 Track bugs and issues
-- 💡 Generate solutions & PRDs
-- 📊 Analytics dashboard
-
-**🚀 [Try the E2E Demo →](examples/feedback/e2e_feedback_github_demo.py)**
+**→ [agents/voice/README.md](agents/voice/README.md)**
 
 ---
 
-## 📚 Documentation Structure
+### **5. Co-Scientist Agent** - Research & Startup Partner 🔬
+AI partner for building science/AI-based companies
 
-### Core Guides
-- **[GETTING_STARTED.md](GETTING_STARTED.md)** - Complete setup (START HERE!)
-- **[QUICKSTART.md](QUICKSTART.md)** - 5-minute quick start
-- **[AGENCY_README.md](AGENCY_README.md)** - Full agency guide
+- Literature reviews
+- Hypothesis generation
+- Experiment design
+- Business strategy
+- Pitch deck creation
+- Fundraising planning
+
+**→ [agents/co_scientist/README.md](agents/co_scientist/README.md)**
+
+---
+
+## 🔌 Integrations
+
+### **ADK Ecosystem** - Google's Agent Development Kit
+Complete integration with Google's ADK:
+
+- **Observability**: AgentOps, Arize, Phoenix, W&B Weave
+- **Platforms**: n8n (automation), StackOne (200+ SaaS apps)
+- **AI/ML**: Hugging Face (200K+ models)
+
+**→ [integrations/adk/README.md](integrations/adk/README.md)**
+
+---
+
+## 📚 Documentation
+
+### Setup Guides
+- **[Getting Started](docs/setup/GETTING_STARTED.md)** - Complete setup walkthrough
+- **[External Services](docs/setup/EXTERNAL_SERVICES_SETUP.md)** - Google, Telegram, etc.
+- **[Quick Integration](docs/setup/QUICK_INTEGRATION_GUIDE.md)** - Fast integration guide
 
 ### Agent Guides
-- **[CC Agent Guide](agency/agents/cc/README.md)** - Gmail, Calendar, Drive
-- **[Job Search Guide](agency/agents/job_search/README.md)** - Job hunting
-- **[Feedback Guide](agency/agents/feedback/README.md)** - Feedback management
-- **[All Agents Overview](agency/agents/README.md)** - Agent framework
-
-### Examples & Demos
-- **[Examples Overview](examples/README.md)** - All examples
-- **[Feedback Examples](examples/feedback/README.md)** - E2E demos
-- **[Basic Examples](examples/basic/)** - Simple agent examples
-
-### Integration & Setup
-- **[Telegram Guide](TELEGRAM_GUIDE.md)** - Telegram bot setup
-- **[Quick Integration Guide](QUICK_INTEGRATION_GUIDE.md)** - Service setup
-- **[External Services Setup](EXTERNAL_SERVICES_SETUP.md)** - Google, etc.
+- **[CC Agent E2E](docs/guides/CC_AGENT_E2E_GUIDE.md)** - Complete CC guide
+- **[Job Hunter](docs/guides/JOB_HUNTER_FLEXIBLE_GUIDE.md)** - Job search automation
+- **[Feedback Team](docs/guides/FEEDBACK_TEAM_GUIDE.md)** - Feedback management
+- **[Telegram Integration](docs/guides/TELEGRAM_GUIDE.md)** - Use agents via Telegram
 
 ### Reference
-- **[CLI Commands](agency/CLI_COMMANDS.md)** - Command reference
-- **[Agent Templates](agency/templates/)** - Customize agents
-- **[Tools Reference](agency/tools/)** - Available tools
+- **[Agent Capabilities](docs/AGENT_CAPABILITIES.md)** - What agents can do
+- **[Claude Skills Guide](docs/CLAUDE_SKILLS_GUIDE.md)** - Skill system
+- **[All Documentation](docs/)** - Complete docs
 
 ---
 
-## 💻 CLI Commands
-
-```bash
-# Start the system
-python -m agency start
-
-# Check status
-python -m agency status
-
-# Send message to agent
-python -m agency send "message" agent_id
-
-# View logs
-python -m agency logs -f
-
-# Stop the system
-python -m agency stop
-```
-
-See **[agency/CLI_COMMANDS.md](agency/CLI_COMMANDS.md)** for full reference.
-
----
-
-## 🎯 Quick Examples
+## 💻 Usage Examples
 
 ### CC Agent - Morning Briefing
 
-```bash
-# Via Telegram
-@cc Good morning briefing
+```python
+from agents.cc.cc_skills import CCSkills
 
-# Via CLI
-python -m agency send "Good morning briefing" cc
+cc = CCSkills()
+result = await cc.get_gmail_summary(max_emails=10)
+result = await cc.get_calendar_summary()
 ```
 
-**Result:**
-- 📧 Email summary (urgent, important)
-- 📅 Today's calendar
-- 📁 Recent Drive files
-- 🎯 Priorities
-- 💡 Suggestions
-
----
-
-### Job Search - Find Roles
+### Voice Agent - Dictation
 
 ```bash
-@job_search Find ML Engineer roles at AI companies in SF
+# Dictate to Claude (10 seconds)
+python -m agents.voice.dictation.dictation_agent 10 claude
 ```
 
-**Result:**
-- 🔍 Searches job boards
-- 📋 Lists relevant openings
-- 💰 Shows salary ranges
-- 🔗 Provides application links
-
----
-
-### Feedback Management - E2E Demo
+### Feedback Agent - E2E Demo
 
 ```bash
-# Run the full E2E demo with real GitHub issues
-ANTHROPIC_API_KEY=sk-ant-... python examples/feedback/e2e_feedback_github_demo.py
-```
-
-**Result:**
-- Fetches real GitHub issues
-- Claude AI clusters by theme
-- Tracks bugs automatically
-- Generates comprehensive solutions with PRDs
-
-**[📖 See Feedback Examples Guide →](examples/feedback/README.md)**
-
----
-
-## 🚀 Running Examples
-
-### Basic Agent Examples
-
-```bash
-# Simple agent
-python examples/basic/simple_agent.py
-
-# Proactive agent with notifications
-python examples/basic/proactive_agent.py
-
-# Multi-agent coordination
-python examples/basic/multi_agent.py
-```
-
-### Feedback Management Examples
-
-```bash
-# E2E GitHub feedback demo (recommended!)
+# Run complete feedback workflow with real GitHub issues
 python examples/feedback/e2e_feedback_github_demo.py
-
-# Basic feedback workflow
-python examples/feedback/feedback_management_demo.py
 ```
 
-**[📖 See all examples →](examples/README.md)**
+### ADK Integration
+
+```python
+from integrations.adk import ADKAgent
+from integrations.adk.integrations import create_observability_stack
+
+agent = ADKAgent("my_agent", "task executor")
+
+# Add full observability
+for integration in create_observability_stack():
+    agent.add_integration(integration)
+
+result = await agent.execute_task("your task")
+```
 
 ---
 
 ## 🛠️ Development
 
-### Adding New Agents
-
-1. Create agent directory:
-   ```bash
-   mkdir -p agency/agents/my_agent
-   ```
-
-2. Create skills file:
-   ```python
-   # agency/agents/my_agent/my_skills.py
-   from agency.agents.base.skills import Skill, AgentSkill
-
-   class MyAgentSkills(AgentSkill):
-       @Skill(name="my_skill", description="...")
-       def my_skill(self, param: str) -> dict:
-           return {"result": "..."}
-   ```
-
-3. Create README documenting your agent
-
-4. Add examples in `agency/agents/my_agent/examples/`
-
-**[📖 See Agent Development Guide →](agency/agents/README.md#adding-new-agents)**
-
----
-
-### Project Structure Benefits
-
-✅ **Easy to find** - Each agent has its own folder with README
-✅ **Self-contained** - Agent code, docs, and examples together
-✅ **Discoverable** - Clear hierarchy and documentation
-✅ **Maintainable** - Changes isolated to agent folders
-✅ **Extensible** - Add new agents easily
-
----
-
-## 🔧 Configuration
-
-### Environment Variables
-
 ```bash
-# Required
-ANTHROPIC_API_KEY=sk-ant-...
-TELEGRAM_BOT_TOKEN=...
+# Run tests
+python tools/test_agency.py
 
-# Optional (for CC agent)
-GOOGLE_OAUTH_CREDENTIALS_FILE=google_oauth_credentials.json
-GOOGLE_TOKEN_FILE=google_token.pickle
+# Start Telegram bot
+./tools/start-telegram.sh
 
-# Optional (for job search)
-LINKEDIN_EMAIL=...
-LINKEDIN_PASSWORD=...
-```
-
-### Agent Templates
-
-Customize agent behavior in `agency/templates/agents.json`:
-
-```json
-{
-  "cc": {
-    "personality": "You are CC, a personal AI productivity agent...",
-    "preferences": {
-      "briefing_time": "08:00",
-      "focus_time_duration": 120
-    }
-  }
-}
+# Verify integrations
+python tools/verify_integrations.py
 ```
 
 ---
 
-## 📖 Learning Path
+## 🎯 Key Features
 
-1. **Start here:** [GETTING_STARTED.md](GETTING_STARTED.md)
-2. **Pick an agent:**
-   - [CC Agent](agency/agents/cc/README.md) - for productivity
-   - [Job Search](agency/agents/job_search/README.md) - for job hunting
-   - [Feedback](agency/agents/feedback/README.md) - for feedback management
-3. **Run examples:** [examples/](examples/)
-4. **Build your own:** [Agent Development](agency/agents/README.md#adding-new-agents)
+✅ **5 Production Agents** - CC, Job Search, Feedback, Voice (4), Co-Scientist
+✅ **Voice-Enabled** - Complete voice system with 4 specialized agents
+✅ **Google ADK** - Full integration ecosystem
+✅ **Multi-Channel** - Telegram, CLI, Web
+✅ **Observability** - AgentOps, Arize, Phoenix, W&B
+✅ **200+ Integrations** - Via StackOne
+✅ **Production-Ready** - Battle-tested tools and workflows
 
 ---
 
-## 🐛 Troubleshooting
-
-### Agent not responding?
+## 📦 Installation
 
 ```bash
-# Check status
-python -m agency status
+# Clone repository
+git clone <repo-url>
+cd agents
 
-# View logs
-python -m agency logs -f
-
-# Restart
-python -m agency stop
-python -m agency start
-```
-
-### Import errors?
-
-```bash
-# Reinstall dependencies
+# Install dependencies
 pip install -r requirements.txt
 
-# Check Python path
-python -c "import agency; print(agency.__file__)"
+# Setup environment
+cp .env.example .env
+# Edit .env with your API keys
+
+# Quick test
+python tools/test_agency.py
 ```
-
-### Can't find documentation?
-
-All documentation is now organized by agent:
-- Agent guides: `agency/agents/<agent_name>/README.md`
-- Examples: `examples/<category>/README.md`
-- Main guides: root directory
-
----
-
-## 🌟 Features
-
-- ✅ **Multi-agent system** - Specialized agents work together
-- ✅ **Multi-channel** - Telegram, CLI, Web interface
-- ✅ **Proactive** - Agents work 24/7 in the background
-- ✅ **Personal** - Customize agent behavior and personality
-- ✅ **Powerful** - Real integrations (Gmail, Calendar, Drive, etc.)
-- ✅ **Extensible** - Easy to add new agents and skills
-- ✅ **Production-ready** - Battle-tested tools and workflows
-
----
-
-## 💡 Use Cases
-
-### Personal Productivity (CC Agent)
-- Morning briefings
-- Email management
-- Meeting scheduling
-- Focus time blocking
-
-### Job Hunting (Job Search Agent)
-- Find relevant openings
-- Tailor resumes
-- Track applications
-- Network outreach
-
-### Product Management (Feedback Agent)
-- Collect user feedback
-- Cluster by theme
-- Track bugs
-- Generate solutions
-
----
-
-## 📦 What's Included
-
-- **3 Production Agents**: CC, Job Search, Feedback
-- **11 Project Templates**: Ready-to-use agent projects
-- **Working Examples**: E2E demos and tutorials
-- **Complete Documentation**: Guides for every agent
-- **Real Integrations**: Gmail, Calendar, Drive, GitHub
-- **CLI & Telegram**: Multiple interaction modes
-
----
-
-## 🎓 Next Steps
-
-1. **[Complete Setup →](GETTING_STARTED.md)** - Get everything running
-2. **[Try CC Agent →](agency/agents/cc/README.md)** - Morning briefings
-3. **[Run Feedback Demo →](examples/feedback/e2e_feedback_github_demo.py)** - See E2E workflow
-4. **[Build Your Agent →](agency/agents/README.md#adding-new-agents)** - Create custom agents
-
----
-
-**Build agentic AI - Proactive, Personal, Powerful!** ✨
-
----
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) for details
 
 ---
 
 ## 🤝 Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ---
 
-## 🔗 Links
+## 📄 License
 
-- **Documentation**: See `agency/agents/` for agent guides
-- **Examples**: See `examples/` for working demos
-- **Issues**: Report bugs on GitHub
-- **Discussions**: Ask questions on GitHub Discussions
+MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-**Ready to get started?** 👉 [GETTING_STARTED.md](GETTING_STARTED.md)
+## 🔗 Quick Links
+
+- **[Getting Started](docs/setup/GETTING_STARTED.md)** - Start here!
+- **[All Agents](agents/README.md)** - Agent overview
+- **[Examples](examples/README.md)** - Working examples
+- **[Documentation](docs/)** - Complete docs
+
+---
+
+**Build production AI agents - from voice to research to automation.** 🚀✨

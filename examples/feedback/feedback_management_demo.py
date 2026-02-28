@@ -16,7 +16,7 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from agency.tools.feedback_tools import (
+from core.agent_tools.feedback_tools import (
     # Collection
     submit_feedback,
     get_feedback_reports,
