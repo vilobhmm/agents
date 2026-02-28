@@ -41,8 +41,8 @@ with similar reports. Thank you for helping us improve!
 ```
 
 **What happens:**
-- Analyzes all "new" feedback reports
-- Groups by similarity (Performance, Crashes, UI/UX, etc.)
+- Analyzes all "new" feedback reports at one place
+- Groups by similarity (Performance, Crashes, Memory Leaks, UI/UX, etc.)
 - Creates clusters with themes
 - Performs root cause analysis
 - Links granular bugs to broader categories
