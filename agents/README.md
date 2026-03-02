@@ -23,6 +23,24 @@ agents/
 │   ├── README.md         # Feedback system guide
 │   ├── feedback_skills.py    # Feedback tools
 │   └── examples/         # Feedback examples
+├── voice/                # Voice Multi-Agent System
+│   ├── README.md         # Voice agents guide
+│   ├── dictation/        # Speech-to-text transcription
+│   ├── productivity/     # Voice productivity assistant
+│   ├── ideas_capture/    # Voice-to-notes
+│   └── dev_copilot/      # Voice coding partner
+├── co_scientist/         # Research & Startup Co-Founder
+│   ├── README.md         # Co-scientist guide
+│   ├── co_scientist_agent.py     # General science research
+│   └── ai_agents_co_scientist.py # AI agents research
+├── time_tracker/         # Time Tracking Multi-Agent System
+│   ├── README.md         # Time tracker guide
+│   ├── activity_monitor/ # Activity tracking agent
+│   ├── categorizer/      # Time categorization agent
+│   ├── analytics/        # Analytics & insights agent
+│   ├── reporter/         # Report generation agent
+│   ├── coordinator.py    # Multi-agent coordinator
+│   └── storage.py        # Data storage manager
 └── base/                 # Base Agent Framework
     └── skills.py         # Core skill definitions
 ```
@@ -119,6 +137,124 @@ cat agency/agents/feedback/README.md
 
 # Run E2E demo
 python examples/feedback/e2e_feedback_github_demo.py
+```
+
+---
+
+### 4. **Voice Multi-Agent System** 🎤
+> *Voice-Powered Productivity*
+
+**Location:** [`voice/`](./voice/)
+
+**What it does:**
+- Speech-to-text transcription (dictation)
+- Voice productivity assistant
+- Voice-to-notes idea capture
+- Voice coding co-pilot
+
+**Agents:**
+- Dictation Agent - Replace typing with voice
+- Productivity Agent - Daily updates via voice
+- Ideas Capture - Speak ideas to Google Docs/Notes
+- Dev Copilot - Voice-based code discussion
+
+**Quick start:**
+```bash
+# View full guide
+cat agents/voice/README.md
+
+# Run demo
+python examples/voice/e2e_voice_demo.py
+```
+
+---
+
+### 5. **Co-Scientist** 🔬
+> *Research & Startup Co-Founder*
+
+**Location:** [`co_scientist/`](./co_scientist/)
+
+**What it does:**
+- Scientific literature review
+- Hypothesis generation
+- Experiment design
+- Business strategy for AI startups
+- Pitch deck creation
+- Fundraising guidance
+
+**Skills:**
+- Literature review and research
+- Agent architecture design
+- Evaluation frameworks
+- Product strategy
+- Market analysis
+
+**Quick start:**
+```bash
+# View full guide
+cat agents/co_scientist/README.md
+
+# Run demo
+python examples/co_scientist/e2e_co_scientist_demo.py
+```
+
+---
+
+### 6. **Time Tracker** ⏱️
+> *Track Every Minute of Your Day*
+
+**Location:** [`time_tracker/`](./time_tracker/)
+
+**What it does:**
+- Minute-level activity tracking
+- Automatic categorization
+- Productivity analytics & scoring
+- Time waste identification
+- Focus metrics & deep work tracking
+- Comprehensive reporting
+
+**Multi-Agent System:**
+- **Activity Monitor** - Track activities with minute-level granularity
+- **Categorizer** - Auto-categorize into work, learning, health, etc.
+- **Analytics** - Identify patterns, trends, and productivity insights
+- **Reporter** - Generate daily/weekly reports and charts
+
+**Key Features:**
+- 📊 Productivity score (0-100)
+- 🎯 Focus metrics and deep work tracking
+- ⚠️ Time waster identification
+- 💡 Personalized improvement suggestions
+- 📈 Weekly trends and patterns
+- 📤 Export to JSON/CSV
+
+**Quick start:**
+```bash
+# View full guide
+cat agents/time_tracker/README.md
+
+# Run interactive demo
+python examples/time_tracker/e2e_time_tracker_demo.py
+
+# Quick demo
+python examples/time_tracker/e2e_time_tracker_demo.py --quick
+```
+
+**Example Usage:**
+```python
+from agents.time_tracker import TimeTrackerCoordinator
+
+# Initialize
+tracker = TimeTrackerCoordinator()
+
+# Track activities
+await tracker.start_activity("Writing documentation")
+# ... do work ...
+await tracker.stop_activity()
+
+# Get insights
+print(await tracker.daily_report())
+score = await tracker.productivity_score()
+print(f"Productivity: {score['productivity_score']}/100")
 ```
 
 ---
