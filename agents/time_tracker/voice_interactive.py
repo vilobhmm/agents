@@ -15,8 +15,39 @@ from typing import Dict, List, Optional, Any
 import re
 
 
+class IntentPatterns:
+    """Natural language intent patterns."""
+    START_ACTIVITY = ['working on', 'starting', 'beginning', "i'm doing"]
+    COMPLETE_ACTIVITY = ['finished', 'completed', 'done with', 'wrapped up']
+    MISSED_ACTIVITY = ["didn't get to", "couldn't do", "skipped", "missed"]
+    WHAT_NEXT = ['what should i do', 'what next', "what's next", 'what now']
+    WHATS_SCHEDULED = ['supposed to be', 'scheduled for', 'planned to']
+    STATUS_CHECK = ['how am i doing', 'my progress', 'status', 'summary']
+    TAKE_BREAK = ['taking a break', 'break time', 'stepping away']
+    DEVIATION = ['scheduled for', 'but actually', 'instead of']
+    REALITY_CHECK = ['reality', 'vs plan', 'actual vs plan', 'adherence']
+
+
+class ActionType:
+    """Action type constants."""
+    CLARIFICATION_NEEDED = 'clarification_needed'
+    STARTED_ACTIVITY = 'started_activity'
+    COMPLETED_ACTIVITY = 'completed_activity'
+    MISSED_ACTIVITY = 'missed_activity'
+    SUGGESTION = 'suggestion'
+    STATUS = 'status'
+    BREAK_STARTED = 'break_started'
+    DEVIATION_LOGGED = 'deviation_logged'
+    REALITY_VS_PLAN = 'reality_vs_plan'
+
+
 class VoiceInteractiveTracker:
     """Voice/conversational interface for the time tracker."""
+
+    # Prevent unbounded memory growth
+    MAX_CONVERSATION_HISTORY = 100
+    MAX_ACTION_LOG = 200
+    MAX_SCHEDULED_ACTIVITIES = 50
 
     def __init__(self, time_tracker_coordinator):
         """
@@ -29,6 +60,21 @@ class VoiceInteractiveTracker:
         self.conversation_history = []
         self.scheduled_activities = []  # Planned activities
         self.action_log = []  # Actual actions taken
+
+    def _trim_history(self):
+        """Trim lists to prevent unbounded memory growth."""
+        if len(self.conversation_history) > self.MAX_CONVERSATION_HISTORY:
+            self.conversation_history = self.conversation_history[-self.MAX_CONVERSATION_HISTORY:]
+        if len(self.action_log) > self.MAX_ACTION_LOG:
+            self.action_log = self.action_log[-self.MAX_ACTION_LOG:]
+        if len(self.scheduled_activities) > self.MAX_SCHEDULED_ACTIVITIES:
+            # Remove oldest completed or past activities
+            now = datetime.now()
+            self.scheduled_activities = [
+                act for act in self.scheduled_activities
+                if act.get('completed_at') is None and
+                   (datetime.fromisoformat(act['time']) > now - timedelta(days=1))
+            ][:self.MAX_SCHEDULED_ACTIVITIES]
 
     async def process_voice_input(self, text: str) -> Dict[str, Any]:
         """
@@ -64,37 +110,40 @@ class VoiceInteractiveTracker:
             'type': 'agent'
         })
 
+        # Trim to prevent unbounded growth
+        self._trim_history()
+
         return response
 
     async def _parse_and_execute(self, text_lower: str, original_text: str) -> Dict[str, Any]:
         """Parse user input and execute appropriate action."""
 
         # Starting activities
-        if any(phrase in text_lower for phrase in ['working on', 'starting', 'beginning', "i'm doing"]):
+        if any(phrase in text_lower for phrase in IntentPatterns.START_ACTIVITY):
             return await self._handle_start_activity(original_text)
 
         # Completed activities
-        elif any(phrase in text_lower for phrase in ['finished', 'completed', 'done with', 'wrapped up']):
+        elif any(phrase in text_lower for phrase in IntentPatterns.COMPLETE_ACTIVITY):
             return await self._handle_completed_activity(original_text)
 
         # Didn't get to something
-        elif any(phrase in text_lower for phrase in ["didn't get to", "couldn't do", "skipped", "missed"]):
+        elif any(phrase in text_lower for phrase in IntentPatterns.MISSED_ACTIVITY):
             return await self._handle_missed_activity(original_text)
 
         # What should I do next?
-        elif any(phrase in text_lower for phrase in ['what should i do', 'what next', "what's next", 'what now']):
+        elif any(phrase in text_lower for phrase in IntentPatterns.WHAT_NEXT):
             return await self._handle_what_next()
 
         # What am I supposed to be doing?
-        elif any(phrase in text_lower for phrase in ['supposed to be', 'scheduled for', 'planned to']):
+        elif any(phrase in text_lower for phrase in IntentPatterns.WHATS_SCHEDULED):
             return await self._handle_whats_scheduled()
 
         # Quick status check
-        elif any(phrase in text_lower for phrase in ['how am i doing', 'my progress', 'status', 'summary']):
+        elif any(phrase in text_lower for phrase in IntentPatterns.STATUS_CHECK):
             return await self._handle_status_check()
 
         # Taking a break
-        elif any(phrase in text_lower for phrase in ['taking a break', 'break time', 'stepping away']):
+        elif any(phrase in text_lower for phrase in IntentPatterns.TAKE_BREAK):
             return await self._handle_break()
 
         # Deviation from plan
@@ -112,7 +161,7 @@ class VoiceInteractiveTracker:
 
         if not activity:
             return {
-                'action': 'clarification_needed',
+                'action': ActionType.CLARIFICATION_NEEDED,
                 'message': "I couldn't quite catch what you're working on. Could you tell me more specifically?"
             }
 
@@ -141,7 +190,7 @@ class VoiceInteractiveTracker:
                 message = f"✅ Started tracking: **{activity}**\nCategory: {result['category']}"
 
         return {
-            'action': 'started_activity',
+            'action': ActionType.STARTED_ACTIVITY,
             'activity': activity,
             'category': result['category'],
             'message': message,
@@ -174,7 +223,7 @@ class VoiceInteractiveTracker:
                 message += f"\n\n💡 Up next: {next_up}"
 
             return {
-                'action': 'completed_activity',
+                'action': ActionType.COMPLETED_ACTIVITY,
                 'activity': completed['activity'],
                 'duration_minutes': duration,
                 'message': message,
@@ -192,7 +241,7 @@ class VoiceInteractiveTracker:
 
         if not activity:
             return {
-                'action': 'clarification_needed',
+                'action': ActionType.CLARIFICATION_NEEDED,
                 'message': "What didn't you get to? I'll make a note of it."
             }
 
@@ -210,7 +259,7 @@ class VoiceInteractiveTracker:
         message = f"📝 Noted: You didn't get to **{activity}**.\n\nWould you like me to:\n• Reschedule it for later?\n• Remove it from your plan?\n• Just keep it noted?"
 
         return {
-            'action': 'missed_activity',
+            'action': ActionType.MISSED_ACTIVITY,
             'activity': activity,
             'message': message
         }
@@ -241,7 +290,7 @@ class VoiceInteractiveTracker:
             message += f"\n⚠️ You have {len(gaps)} time gap(s) to fill in."
 
         return {
-            'action': 'suggestion',
+            'action': ActionType.SUGGESTION,
             'scheduled': scheduled,
             'suggestions': suggestions,
             'message': message
@@ -309,7 +358,7 @@ class VoiceInteractiveTracker:
                 message += f"• {activity}: {mins/60:.1f}h\n"
 
         return {
-            'action': 'status',
+            'action': ActionType.STATUS,
             'summary': summary,
             'productivity_score': score['productivity_score'],
             'adherence': adherence,
@@ -321,7 +370,7 @@ class VoiceInteractiveTracker:
         result = await self.tracker.start_activity("Break", "breaks")
 
         return {
-            'action': 'break_started',
+            'action': ActionType.BREAK_STARTED,
             'message': "✅ Enjoy your break! Let me know when you're back. 😊"
         }
 
@@ -349,14 +398,14 @@ class VoiceInteractiveTracker:
             message += f"That's totally fine! Flexibility is important. Should I reschedule '{scheduled}' for later?"
 
             return {
-                'action': 'deviation_logged',
+                'action': ActionType.DEVIATION_LOGGED,
                 'scheduled': scheduled,
                 'actual': actual,
                 'message': message
             }
 
         return {
-            'action': 'clarification_needed',
+            'action': ActionType.CLARIFICATION_NEEDED,
             'message': "What are you actually working on now?"
         }
 
@@ -367,7 +416,7 @@ class VoiceInteractiveTracker:
         if activity and len(activity) > 3:
             result = await self.tracker.start_activity(activity)
             return {
-                'action': 'started_activity',
+                'action': ActionType.STARTED_ACTIVITY,
                 'activity': activity,
                 'message': f"✅ Started tracking: **{activity}**\n(If this isn't right, just tell me what you're actually doing!)"
             }
@@ -578,6 +627,7 @@ class VoiceInteractiveTracker:
             'duration': duration,
             'category': category
         })
+        self._trim_history()
 
     async def get_reality_vs_plan(self) -> Dict[str, Any]:
         """Compare what was planned vs what actually happened."""
