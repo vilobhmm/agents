@@ -13,10 +13,32 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 import re
 import json
+import asyncio
+
+
+class ResearchTopic:
+    """Research topic constants."""
+    AGENTS = 'agents'
+    REASONING = 'reasoning'
+    RL = 'rl'
+    LLM = 'llm'
+    MULTIMODAL = 'multimodal'
 
 
 class AIResearchScraper:
     """Scraper for latest AI/Agent research and findings."""
+
+    # Research topic keyword mappings
+    TOPIC_KEYWORDS = {
+        ResearchTopic.AGENTS: ['agent', 'multi-agent', 'autonomous', 'llm agent'],
+        ResearchTopic.REASONING: ['reasoning', 'chain-of-thought', 'cot', 'thinking'],
+        ResearchTopic.RL: ['reinforcement learning', 'rl', 'policy', 'reward'],
+        ResearchTopic.LLM: ['large language model', 'llm', 'gpt', 'transformer'],
+        ResearchTopic.MULTIMODAL: ['multimodal', 'vision', 'audio', 'video'],
+    }
+
+    # Cache TTL in seconds (1 hour)
+    CACHE_TTL = 3600
 
     def __init__(self):
         """Initialize the research scraper."""
@@ -36,7 +58,27 @@ class AIResearchScraper:
             'https://blogs.microsoft.com/ai/',
         ]
 
+        # Cache format: {key: {'data': result, 'timestamp': datetime}}
         self.cache = {}
+
+    def _get_from_cache(self, key: str) -> Optional[Any]:
+        """Get data from cache if not expired."""
+        if key in self.cache:
+            cached = self.cache[key]
+            age = (datetime.now() - cached['timestamp']).total_seconds()
+            if age < self.CACHE_TTL:
+                return cached['data']
+            else:
+                # Expired, remove it
+                del self.cache[key]
+        return None
+
+    def _save_to_cache(self, key: str, data: Any):
+        """Save data to cache with timestamp."""
+        self.cache[key] = {
+            'data': data,
+            'timestamp': datetime.now()
+        }
 
     async def scrape_latest(self, hours: int = 24) -> Dict[str, List[Dict]]:
         """
@@ -48,10 +90,17 @@ class AIResearchScraper:
         Returns:
             Dictionary of papers/articles by source
         """
+        # Run all scraping operations in parallel for better performance
+        arxiv_papers, blog_posts, trending = await asyncio.gather(
+            self._scrape_arxiv(hours),
+            self._scrape_blogs(hours),
+            self._get_trending()
+        )
+
         results = {
-            'arxiv_papers': await self._scrape_arxiv(hours),
-            'blog_posts': await self._scrape_blogs(hours),
-            'trending': await self._get_trending(),
+            'arxiv_papers': arxiv_papers,
+            'blog_posts': blog_posts,
+            'trending': trending,
             'timestamp': datetime.now().isoformat()
         }
 
@@ -64,6 +113,12 @@ class AIResearchScraper:
         In production, this would use arXiv API or web scraping.
         For now, returns structured data format.
         """
+        # Check cache first
+        cache_key = f'arxiv_{hours}'
+        cached = self._get_from_cache(cache_key)
+        if cached is not None:
+            return cached
+
         # This is a placeholder - in production would use:
         # import arxiv
         # search = arxiv.Search(...)
@@ -81,6 +136,10 @@ class AIResearchScraper:
                 'relevance_score': 0.95
             }
         ]
+
+        # Save to cache
+        cache_key = f'arxiv_{hours}'
+        self._save_to_cache(cache_key, papers)
 
         return papers
 
@@ -147,19 +206,17 @@ class AIResearchScraper:
 
     async def get_papers_by_topic(self, topic: str) -> List[Dict[str, Any]]:
         """Get papers related to a specific topic."""
-        topic_keywords = {
-            'agents': ['agent', 'multi-agent', 'autonomous', 'llm agent'],
-            'reasoning': ['reasoning', 'chain-of-thought', 'cot', 'thinking'],
-            'rl': ['reinforcement learning', 'rl', 'policy', 'reward'],
-            'llm': ['large language model', 'llm', 'gpt', 'transformer'],
-            'multimodal': ['multimodal', 'vision', 'audio', 'video'],
-        }
+        keywords = self.TOPIC_KEYWORDS.get(topic.lower(), [topic])
 
-        keywords = topic_keywords.get(topic.lower(), [topic])
+        # Search all keywords in parallel
+        search_results = await asyncio.gather(*[
+            self.search_papers(keyword, limit=5)
+            for keyword in keywords
+        ])
 
+        # Flatten results
         results = []
-        for keyword in keywords:
-            papers = await self.search_papers(keyword, limit=5)
+        for papers in search_results:
             results.extend(papers)
 
         # Deduplicate
