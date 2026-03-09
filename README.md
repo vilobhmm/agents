@@ -1,6 +1,6 @@
 # 🤖 AI Agents Repository
 
-**Production-ready AI agents with voice, research, and integration capabilities*...*
+**Production-ready Multi-AI Agents for research, persoanl, proactive and productive capabilities*...*
 
 ---
 
