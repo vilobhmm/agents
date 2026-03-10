@@ -87,7 +87,7 @@ pytest tests/test_agent.py
 
 ## Reporting Issues
 
-When reporting issues, include:
+When reporting issues include:
 - OS and Python version
 - OpenClaw version
 - Steps to reproduce
