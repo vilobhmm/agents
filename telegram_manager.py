@@ -1,5 +1,5 @@
 """
-OpenClaw Telegram Manager
+OpenClaw Multi Agent Telegram Manager
 
 Control and manage all your AI agents via Telegram like virtual employees.
 """
