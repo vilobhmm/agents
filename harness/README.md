@@ -10,7 +10,7 @@ The harness is your CI-friendly health-check system that ensures all agents can 
 
 ## 🏗️ Architecture
 
-The harness is built as a four-layer stack, each layer with a single responsibility:
+The Multi AI Agent harness is built as a four-layer stack, each layer with a single responsibility:
 
 ### Layer 1 — CLI Entry Point (`__main__.py`)
 
