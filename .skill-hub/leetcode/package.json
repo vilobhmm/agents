@@ -1,0 +1,64 @@
+{
+  "name": "leetcode",
+  "version": "1.0.0",
+  "description": "Get LeetCode problems, practice coding challenges, and prepare for technical interviews with progressive hints and curated practice sets",
+  "author": "OpenClaw Team",
+  "license": "MIT",
+  "keywords": [
+    "leetcode",
+    "coding-interview",
+    "algorithms",
+    "data-structures",
+    "practice",
+    "technical-interview",
+    "problem-solving",
+    "programming-challenges"
+  ],
+  "category": "development",
+  "tags": [
+    "coding",
+    "interview-prep",
+    "education",
+    "learning",
+    "python",
+    "javascript",
+    "algorithms"
+  ],
+  "homepage": "https://github.com/vilobhmm/agents/tree/main/mcp-servers/leetcode",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vilobhmm/agents.git"
+  },
+  "mcp": {
+    "server": "mcp-servers/leetcode/server.py",
+    "protocol": "stdio",
+    "runtime": "python3",
+    "dependencies": ["mcp>=0.9.0", "httpx>=0.27.0"]
+  },
+  "skill": {
+    "path": "~/.claude/skills/leetcode/SKILL.md",
+    "triggers": ["leetcode", "coding", "interview", "algorithm"],
+    "commands": ["/leetcode"]
+  },
+  "features": [
+    "Get any LeetCode problem by ID or slug",
+    "Daily coding challenge",
+    "Search problems by difficulty and topic",
+    "Progressive hints system",
+    "Problem statistics and acceptance rates",
+    "Multi-language support (Python, JS, C++, Java, etc.)",
+    "No LeetCode login required"
+  ],
+  "screenshots": [],
+  "examples": [
+    "What's today's LeetCode daily challenge?",
+    "Show me problem 42",
+    "Find 5 medium array problems",
+    "I need a hint for two-sum",
+    "Search for easy dynamic programming problems"
+  ],
+  "requirements": {
+    "python": ">=3.8",
+    "packages": ["mcp", "httpx"]
+  }
+}
