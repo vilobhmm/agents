@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "leetcode": {
+      "command": "python3",
+      "args": [
+        "/home/user/agents/mcp-servers/leetcode/server.py"
+      ],
+      "env": {}
+    }
+  }
+}
