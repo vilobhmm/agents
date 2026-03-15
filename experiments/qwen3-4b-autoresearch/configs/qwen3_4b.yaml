@@ -1,0 +1,163 @@
+# Qwen3-4B Architecture Configuration
+# Based on Qwen3 Technical Report (arXiv:2505.09388)
+# Adapted for autoresearch training on TinyStories
+
+model:
+  name: "qwen3-4b-tinystories"
+  architecture: "qwen3"
+
+  # Model Dimensions
+  n_layers: 36                    # Number of transformer layers
+  n_heads: 32                     # Number of attention heads
+  n_kv_heads: 8                   # Number of key-value heads (GQA)
+  d_model: 3072                   # Model dimension / hidden size
+  d_ff: 8192                      # Feed-forward dimension (SwiGLU uses ~2.7x d_model)
+  head_dim: 96                    # Dimension per attention head (d_model / n_heads)
+
+  # Total parameters: ~4.0B (3.6B non-embedding)
+
+  # Vocabulary & Tokenization
+  vocab_size: 50304               # Adapted for TinyStories (smaller than Qwen3's 151,669)
+  max_seq_len: 2048               # Context length (TinyStories compatible)
+
+  # Architecture Components
+  attention:
+    type: "grouped_query"         # Grouped Query Attention (GQA)
+    use_flash: true               # FlashAttention-2 if available
+    qk_norm: true                 # QK-Normalization (new in Qwen3)
+    qkv_bias: false               # No bias in QKV projections (removed in Qwen3)
+    rope:
+      type: "rotary"              # Rotary Positional Embeddings
+      base: 1000000               # Extended base frequency (ABF technique)
+      scaling_factor: 1.0         # YaRN scaling for longer contexts
+
+  activation:
+    type: "swiglu"                # SwiGLU activation function
+
+  normalization:
+    type: "rmsnorm"               # Root Mean Square Layer Normalization
+    position: "pre"               # Pre-normalization (before attention/FFN)
+    eps: 1e-6                     # Epsilon for numerical stability
+
+  # Initialization
+  init:
+    std: 0.02                     # Standard deviation for weight initialization
+    tie_weights: true             # Tie input/output embeddings (memory efficient)
+
+# Training Configuration
+training:
+  # Autoresearch Settings
+  autoresearch:
+    enabled: true
+    max_experiments: 100          # Run ~100 experiments overnight
+    experiment_duration: 300      # 5 minutes per experiment (300 seconds)
+    metric: "val_loss"            # Optimization target
+    direction: "minimize"         # Lower is better
+
+  # Optimizer
+  optimizer:
+    type: "adamw"
+    lr: 6e-4                      # Peak learning rate
+    betas: [0.9, 0.95]
+    eps: 1e-8
+    weight_decay: 0.1
+    grad_clip: 1.0                # Gradient clipping
+
+  # Learning Rate Schedule
+  lr_schedule:
+    type: "cosine"
+    warmup_steps: 2000            # Warmup iterations
+    max_steps: 100000             # Total training steps
+    min_lr_ratio: 0.1             # Minimum LR as fraction of peak
+
+  # Batch Configuration
+  batch:
+    micro_batch_size: 8           # Per-device batch size
+    gradient_accumulation: 8      # Accumulate gradients
+    # Effective batch size: 8 * 8 = 64 sequences
+
+  # Mixed Precision
+  precision:
+    dtype: "bf16"                 # BFloat16 for training
+    autocast: true
+
+  # Checkpointing
+  checkpoint:
+    save_interval: 1000           # Save every 1000 steps
+    keep_last_n: 5                # Keep last 5 checkpoints
+    gradient_checkpointing: true  # Memory optimization
+
+  # Evaluation
+  eval:
+    interval: 500                 # Evaluate every 500 steps
+    batches: 100                  # Number of eval batches
+
+  # Logging
+  logging:
+    log_interval: 10
+    wandb: false                  # Weights & Biases integration
+    tensorboard: true
+
+# Dataset Configuration
+data:
+  name: "tinystories"
+  source: "karpathy/tinystories-gpt4-clean"
+
+  # Data Processing
+  processing:
+    tokenizer: "gpt2"             # Use GPT-2 tokenizer for TinyStories
+    seq_length: 2048              # Sequence length
+    overlap: 0                    # No overlap between sequences
+
+  # Data Split
+  split:
+    train: 0.98
+    val: 0.02
+
+  # Data Loading
+  dataloader:
+    num_workers: 4
+    pin_memory: true
+    prefetch_factor: 2
+
+# System Configuration
+system:
+  device: "cuda"                  # Use GPU
+  compile: true                   # Torch compile for speed
+  seed: 42                        # Reproducibility
+
+  # Distributed Training (optional)
+  distributed:
+    enabled: false
+    backend: "nccl"
+
+# Autoresearch Hyperparameter Search Space
+search_space:
+  # Learning Rate
+  lr: [3e-4, 6e-4, 1e-3, 2e-3]
+
+  # Batch Size (via gradient accumulation)
+  gradient_accumulation: [4, 8, 16]
+
+  # Warmup
+  warmup_steps: [1000, 2000, 4000]
+
+  # Weight Decay
+  weight_decay: [0.0, 0.01, 0.1]
+
+  # Architecture Tweaks
+  architecture:
+    qk_norm: [true, false]
+    tie_weights: [true, false]
+    gradient_checkpointing: [true, false]
+
+  # Optimizer
+  optimizer_betas: [[0.9, 0.95], [0.9, 0.99], [0.95, 0.99]]
+
+# Notes from Qwen3 Paper
+# - QK-Norm ensures stable training at scale
+# - Removed QKV bias improves efficiency
+# - GQA provides good balance of speed and quality
+# - SwiGLU outperforms other activations
+# - RMSNorm is faster than LayerNorm
+# - Extended RoPE base enables longer contexts
