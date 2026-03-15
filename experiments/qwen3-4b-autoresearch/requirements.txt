@@ -1,0 +1,29 @@
+# Qwen3-4B AutoResearch Requirements
+
+# Core ML Framework
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Dataset & Tokenization
+datasets>=2.14.0
+transformers>=4.30.0
+
+# AutoResearch AI Agent
+anthropic>=0.25.0
+
+# Training & Monitoring
+tensorboard>=2.13.0
+wandb>=0.15.0  # Optional
+
+# Utilities
+pyyaml>=6.0
+tqdm>=4.65.0
+numpy>=1.24.0
+
+# Fast attention (optional but recommended)
+flash-attn>=2.0.0  # Requires CUDA
+
+# Development
+pytest>=7.4.0
+black>=23.0.0
+isort>=5.12.0
